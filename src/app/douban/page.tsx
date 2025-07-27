@@ -234,19 +234,22 @@ function DoubanPageClient() {
     if (sortSelection !== '默认') {
       filteredData.sort((a, b) => {
         switch (sortSelection) {
-          case 'rating':
+          case 'rating': {
             const rateA = parseFloat(a.rate) || 0;
             const rateB = parseFloat(b.rate) || 0;
             return rateB - rateA;
-          case 'time':
+          }
+          case 'time': {
             const yearA = parseInt(a.year) || 0;
             const yearB = parseInt(b.year) || 0;
             return yearB - yearA;
-          case 'votes':
+          }
+          case 'votes': {
             // 由于没有投票数信息，这里按评分排序作为替代
             const rateA2 = parseFloat(a.rate) || 0;
             const rateB2 = parseFloat(b.rate) || 0;
             return rateB2 - rateA2;
+          }
           default:
             return 0;
         }
