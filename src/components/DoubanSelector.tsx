@@ -37,10 +37,18 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
   regionSelection = '全部',
   eraSelection = '全部',
   sortSelection = '默认',
-  onGenreChange = () => {},
-  onRegionChange = () => {},
-  onEraChange = () => {},
-  onSortChange = () => {},
+  onGenreChange = () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+  },
+  onRegionChange = () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+  },
+  onEraChange = () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+  },
+  onSortChange = () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+  },
 }) => {
   // 为不同的选择器创建独立的refs和状态
   const primaryContainerRef = useRef<HTMLDivElement>(null);
