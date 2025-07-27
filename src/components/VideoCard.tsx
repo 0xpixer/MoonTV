@@ -110,11 +110,18 @@ export default function VideoCard({
     return null;
   }, [from, douban_id, source, id]);
 
+  // 解析存储键获取 source 和 id
+  const { parsedSource, parsedId } = useMemo(() => {
+    if (!storageKey) return { parsedSource: null, parsedId: null };
+    const [source, id] = storageKey.split('+');
+    return { parsedSource: source, parsedId: id };
+  }, [storageKey]);
+
   // 获取收藏状态
   const fetchFavoriteStatus = async () => {
-    if (!storageKey) return;
+    if (!parsedSource || !parsedId) return;
     try {
-      const status = await isFavorited(storageKey);
+      const status = await isFavorited(parsedSource, parsedId);
       setFavorited(status);
     } catch (error) {
       console.error('Failed to fetch favorite status:', error);
@@ -123,30 +130,31 @@ export default function VideoCard({
 
   // 订阅收藏状态更新
   useEffect(() => {
-    if (!storageKey) return;
+    if (!parsedSource || !parsedId) return;
     fetchFavoriteStatus();
     const unsubscribe = subscribeToDataUpdates('favoritesUpdated', () => {
       fetchFavoriteStatus();
     });
     return unsubscribe;
-  }, [storageKey]);
+  }, [parsedSource, parsedId]);
 
   // 处理收藏/取消收藏
   const handleFavoriteToggle = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!storageKey || isLoading) return;
+    if (!parsedSource || !parsedId || isLoading) return;
     setIsLoading(true);
     try {
       if (favorited) {
-        await deleteFavorite(storageKey);
+        await deleteFavorite(parsedSource, parsedId);
         setFavorited(false);
       } else {
-        await saveFavorite(storageKey, {
+        await saveFavorite(parsedSource, parsedId, {
           title: actualTitle,
           cover: actualPoster,
           total_episodes: episodes || 0,
           source_name: source_name || '',
+          year: year || '',
           save_time: Date.now(),
           search_title: query,
         });
@@ -157,23 +165,23 @@ export default function VideoCard({
     } finally {
       setIsLoading(false);
     }
-  }, [storageKey, favorited, isLoading, actualTitle, actualPoster, episodes, source_name, query]);
+  }, [parsedSource, parsedId, favorited, isLoading, actualTitle, actualPoster, episodes, source_name, query]);
 
   // 处理播放记录删除
   const handleDeletePlayRecord = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!storageKey || isLoading) return;
+    if (!parsedSource || !parsedId || isLoading) return;
     setIsLoading(true);
     try {
-      await deletePlayRecord(storageKey);
+      await deletePlayRecord(parsedSource, parsedId);
       onDelete?.();
     } catch (error) {
       console.error('Failed to delete play record:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [storageKey, isLoading, onDelete]);
+  }, [parsedSource, parsedId, isLoading, onDelete]);
 
   // 处理点击事件
   const handleClick = useCallback((e: React.MouseEvent) => {
