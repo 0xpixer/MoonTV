@@ -39,15 +39,6 @@ function DoubanPageClient() {
     return '全部';
   });
 
-  // 新增的选择器状态
-  const [genreSelection, setGenreSelection] = useState<string>('全部');
-  const [regionSelection, setRegionSelection] = useState<string>('全部');
-  const [eraSelection, setEraSelection] = useState<string>('全部');
-  const [sortSelection, setSortSelection] = useState<string>('默认');
-
-  // 原始数据状态（用于过滤）
-  const [rawDoubanData, setRawDoubanData] = useState<DoubanItem[]>([]);
-
   // 初始化时标记选择器为准备好状态
   useEffect(() => {
     // 短暂延迟确保初始状态设置完成
@@ -70,31 +61,15 @@ function DoubanPageClient() {
     if (type === 'movie') {
       setPrimarySelection('热门');
       setSecondarySelection('全部');
-      setGenreSelection('全部');
-      setRegionSelection('全部');
-      setEraSelection('全部');
-      setSortSelection('默认');
     } else if (type === 'tv') {
       setPrimarySelection('');
       setSecondarySelection('tv');
-      setGenreSelection('全部');
-      setRegionSelection('全部');
-      setEraSelection('全部');
-      setSortSelection('默认');
     } else if (type === 'show') {
       setPrimarySelection('');
       setSecondarySelection('show');
-      setGenreSelection('全部');
-      setRegionSelection('全部');
-      setEraSelection('全部');
-      setSortSelection('默认');
     } else {
       setPrimarySelection('');
       setSecondarySelection('全部');
-      setGenreSelection('全部');
-      setRegionSelection('全部');
-      setEraSelection('全部');
-      setSortSelection('默认');
     }
 
     // 使用短暂延迟确保状态更新完成后标记选择器准备好
@@ -128,15 +103,11 @@ function DoubanPageClient() {
         category: primarySelection,
         type: secondarySelection,
         // 新增参数（如果API支持的话）
-        genre: genreSelection !== '全部' ? genreSelection : undefined,
-        region: regionSelection !== '全部' ? regionSelection : undefined,
-        era: eraSelection !== '全部' ? eraSelection : undefined,
-        sort: sortSelection !== '默认' ? sortSelection : undefined,
         pageLimit: 25,
         pageStart,
       };
     },
-    [type, primarySelection, secondarySelection, genreSelection, regionSelection, eraSelection, sortSelection]
+    [type, primarySelection, secondarySelection]
   );
 
   // 防抖的数据加载函数
@@ -146,7 +117,6 @@ function DoubanPageClient() {
       const data = await getDoubanCategories(getRequestParams(0));
 
       if (data.code === 200) {
-        setRawDoubanData(data.list);
         setDoubanData(data.list);
         setHasMore(data.list.length === 25);
         setLoading(false);
@@ -157,115 +127,6 @@ function DoubanPageClient() {
       console.error(err);
     }
   }, [type, primarySelection, secondarySelection, getRequestParams]);
-
-  // 客户端过滤函数
-  const filterData = useCallback((data: DoubanItem[]) => {
-    let filteredData = [...data];
-
-    // 类型过滤
-    if (genreSelection !== '全部') {
-      // 这里需要根据实际数据结构来实现类型过滤
-      // 由于豆瓣API返回的数据中没有明确的类型信息，我们可以基于标题进行简单过滤
-      filteredData = filteredData.filter(item => {
-        // 简单的关键词匹配（实际应用中可能需要更复杂的逻辑）
-        const title = item.title.toLowerCase();
-        const genreKeywords: Record<string, string[]> = {
-          '动作': ['动作', '枪战', '打斗', '战争', '冒险'],
-          '喜剧': ['喜剧', '搞笑', '幽默', '欢乐'],
-          '爱情': ['爱情', '浪漫', '恋爱'],
-          '科幻': ['科幻', '未来', '太空', '机器人'],
-          '恐怖': ['恐怖', '惊悚', '鬼', '灵异'],
-          '悬疑': ['悬疑', '推理', '侦探', '犯罪'],
-          '剧情': ['剧情', '故事'],
-          '动画': ['动画', '卡通', '动漫'],
-          '纪录片': ['纪录片', '记录'],
-        };
-        
-        const keywords = genreKeywords[genreSelection];
-        return keywords ? keywords.some(keyword => title.includes(keyword)) : true;
-      });
-    }
-
-    // 地区过滤
-    if (regionSelection !== '全部') {
-      filteredData = filteredData.filter(item => {
-        const title = item.title.toLowerCase();
-        const regionKeywords: Record<string, string[]> = {
-          '中国大陆': ['中国大陆', '中国', '国产'],
-          '中国香港': ['香港', '港片'],
-          '中国台湾': ['台湾', '台片'],
-          '美国': ['美国', '好莱坞'],
-          '英国': ['英国', '英剧'],
-          '法国': ['法国', '法片'],
-          '德国': ['德国', '德片'],
-          '日本': ['日本', '日片'],
-          '韩国': ['韩国', '韩片'],
-          '印度': ['印度', '印片'],
-        };
-        
-        const keywords = regionKeywords[regionSelection];
-        return keywords ? keywords.some(keyword => title.includes(keyword)) : true;
-      });
-    }
-
-    // 年代过滤
-    if (eraSelection !== '全部') {
-      filteredData = filteredData.filter(item => {
-        const year = parseInt(item.year);
-        if (isNaN(year)) return true;
-        
-        const eraRanges: Record<string, [number, number]> = {
-          '2020': [2020, 2029],
-          '2010': [2010, 2019],
-          '2000': [2000, 2009],
-          '1990': [1990, 1999],
-          '1980': [1980, 1989],
-          '1970': [1970, 1979],
-          '1960': [1960, 1969],
-          'earlier': [0, 1959],
-        };
-        
-        const range = eraRanges[eraSelection];
-        return range ? year >= range[0] && year <= range[1] : true;
-      });
-    }
-
-    // 排序
-    if (sortSelection !== '默认') {
-      filteredData.sort((a, b) => {
-        switch (sortSelection) {
-          case 'rating': {
-            const rateA = parseFloat(a.rate) || 0;
-            const rateB = parseFloat(b.rate) || 0;
-            return rateB - rateA;
-          }
-          case 'time': {
-            const yearA = parseInt(a.year) || 0;
-            const yearB = parseInt(b.year) || 0;
-            return yearB - yearA;
-          }
-          case 'votes': {
-            // 由于没有投票数信息，这里按评分排序作为替代
-            const rateA2 = parseFloat(a.rate) || 0;
-            const rateB2 = parseFloat(b.rate) || 0;
-            return rateB2 - rateA2;
-          }
-          default:
-            return 0;
-        }
-      });
-    }
-
-    return filteredData;
-  }, [genreSelection, regionSelection, eraSelection, sortSelection]);
-
-  // 应用过滤器的效果
-  useEffect(() => {
-    if (rawDoubanData.length > 0) {
-      const filtered = filterData(rawDoubanData);
-      setDoubanData(filtered);
-    }
-  }, [rawDoubanData, filterData]);
 
   // 只在选择器准备好后才加载数据
   useEffect(() => {
@@ -301,10 +162,6 @@ function DoubanPageClient() {
     type,
     primarySelection,
     secondarySelection,
-    genreSelection,
-    regionSelection,
-    eraSelection,
-    sortSelection,
     loadInitialData,
   ]);
 
@@ -320,10 +177,7 @@ function DoubanPageClient() {
           );
 
           if (data.code === 200) {
-            setRawDoubanData((prev) => [...prev, ...data.list]);
-            // 对新加载的数据应用当前过滤器
-            const filteredNewData = filterData(data.list);
-            setDoubanData((prev) => [...prev, ...filteredNewData]);
+            setDoubanData((prev) => [...prev, ...data.list]);
             setHasMore(data.list.length === 25);
           } else {
             throw new Error(data.message || '获取数据失败');
@@ -337,7 +191,7 @@ function DoubanPageClient() {
 
       fetchMoreData();
     }
-  }, [currentPage, type, primarySelection, secondarySelection, getRequestParams, filterData]);
+  }, [currentPage, type, primarySelection, secondarySelection, getRequestParams]);
 
   // 设置滚动监听
   useEffect(() => {
@@ -393,47 +247,6 @@ function DoubanPageClient() {
     [secondarySelection]
   );
 
-  // 新增的选择器处理函数
-  const handleGenreChange = useCallback(
-    (value: string) => {
-      if (value !== genreSelection) {
-        setLoading(true);
-        setGenreSelection(value);
-      }
-    },
-    [genreSelection]
-  );
-
-  const handleRegionChange = useCallback(
-    (value: string) => {
-      if (value !== regionSelection) {
-        setLoading(true);
-        setRegionSelection(value);
-      }
-    },
-    [regionSelection]
-  );
-
-  const handleEraChange = useCallback(
-    (value: string) => {
-      if (value !== eraSelection) {
-        setLoading(true);
-        setEraSelection(value);
-      }
-    },
-    [eraSelection]
-  );
-
-  const handleSortChange = useCallback(
-    (value: string) => {
-      if (value !== sortSelection) {
-        setLoading(true);
-        setSortSelection(value);
-      }
-    },
-    [sortSelection]
-  );
-
   const getPageTitle = () => {
     // 根据 type 生成标题
     return type === 'movie' ? '电影' : type === 'tv' ? '电视剧' : '综艺';
@@ -471,14 +284,6 @@ function DoubanPageClient() {
               secondarySelection={secondarySelection}
               onPrimaryChange={handlePrimaryChange}
               onSecondaryChange={handleSecondaryChange}
-              genreSelection={genreSelection}
-              regionSelection={regionSelection}
-              eraSelection={eraSelection}
-              sortSelection={sortSelection}
-              onGenreChange={handleGenreChange}
-              onRegionChange={handleRegionChange}
-              onEraChange={handleEraChange}
-              onSortChange={handleSortChange}
             />
           </div>
         </div>
