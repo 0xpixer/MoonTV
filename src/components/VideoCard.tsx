@@ -269,11 +269,11 @@ export default function VideoCard({
 
   return (
     <div
-      className='group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500]'
+      className='group relative w-full rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft cursor-pointer transition-all duration-500 ease-out hover:scale-[1.05] hover:shadow-large hover:-translate-y-2 hover:z-[500] overflow-hidden'
       onClick={handleClick}
     >
       {/* 海报容器 */}
-      <div className='relative aspect-[2/3] overflow-hidden rounded-lg'>
+      <div className='relative aspect-[2/3] overflow-hidden rounded-t-2xl'>
         {/* 骨架屏 */}
         {!isLoading && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
         {/* 图片 */}
@@ -281,58 +281,64 @@ export default function VideoCard({
           src={processImageUrl(actualPoster)}
           alt={actualTitle}
           fill
-          className='object-cover'
+          className='object-cover transition-transform duration-500 group-hover:scale-110'
           referrerPolicy='no-referrer'
           onLoadingComplete={() => setIsLoading(true)}
         />
 
-        {/* 悬浮遮罩 */}
-        <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100' />
+        {/* 现代渐变遮罩 */}
+        <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100' />
 
         {/* 播放按钮 */}
         {config.showPlayButton && (
-          <div className='absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-300 ease-in-out delay-75 group-hover:opacity-100 group-hover:scale-100'>
-            <PlayCircleIcon
-              size={50}
-              strokeWidth={0.8}
-              className='text-white fill-transparent transition-all duration-300 ease-out hover:fill-green-500 hover:scale-[1.1]'
-            />
+          <div className='absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 ease-out delay-100 group-hover:opacity-100 group-hover:scale-100'>
+            <div className='bg-white/20 backdrop-blur-sm rounded-full p-4 border border-white/30 shadow-large'>
+              <PlayCircleIcon
+                size={40}
+                strokeWidth={1.5}
+                className='text-white fill-white/20 transition-all duration-300 ease-out group-hover:fill-brand-400 group-hover:scale-110'
+              />
+            </div>
           </div>
         )}
 
         {/* 操作按钮 */}
         {(config.showHeart || config.showCheckCircle) && (
-          <div className='absolute bottom-3 right-3 flex gap-3 opacity-0 translate-y-2 transition-all duration-300 ease-in-out group-hover:opacity-100 group-hover:translate-y-0'>
+          <div className='absolute bottom-4 right-4 flex gap-3 opacity-0 translate-y-4 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0'>
             {config.showCheckCircle && (
-              <CheckCircle
-                onClick={handleDeleteRecord}
-                size={20}
-                className='text-white transition-all duration-300 ease-out hover:stroke-green-500 hover:scale-[1.1]'
-              />
+              <div className='bg-white/20 backdrop-blur-sm rounded-full p-2 border border-white/30 shadow-medium'>
+                <CheckCircle
+                  onClick={handleDeleteRecord}
+                  size={18}
+                  className='text-white transition-all duration-300 ease-out hover:stroke-brand-400 hover:scale-110'
+                />
+              </div>
             )}
             {config.showHeart && (
-              <Heart
-                onClick={handleToggleFavorite}
-                size={20}
-                className={`transition-all duration-300 ease-out ${
-                  favorited
-                    ? 'fill-red-600 stroke-red-600'
-                    : 'fill-transparent stroke-white hover:stroke-red-400'
-                } hover:scale-[1.1]`}
-              />
+              <div className='bg-white/20 backdrop-blur-sm rounded-full p-2 border border-white/30 shadow-medium'>
+                <Heart
+                  onClick={handleToggleFavorite}
+                  size={18}
+                  className={`transition-all duration-300 ease-out ${
+                    favorited
+                      ? 'fill-red-500 stroke-red-500'
+                      : 'fill-transparent stroke-white hover:stroke-red-400'
+                  } hover:scale-110`}
+                />
+              </div>
             )}
           </div>
         )}
 
-        {/* 徽章 */}
+        {/* 现代徽章设计 */}
         {config.showRating && rate && (
-          <div className='absolute top-2 right-2 bg-pink-500 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ease-out group-hover:scale-110'>
+          <div className='absolute top-3 right-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-large transition-all duration-300 ease-out group-hover:scale-110'>
             {rate}
           </div>
         )}
 
         {actualEpisodes && actualEpisodes > 1 && (
-          <div className='absolute top-2 right-2 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-md transition-all duration-300 ease-out group-hover:scale-110'>
+          <div className='absolute top-3 right-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-large transition-all duration-300 ease-out group-hover:scale-110'>
             {currentEpisode
               ? `${currentEpisode}/${actualEpisodes}`
               : actualEpisodes}
@@ -346,9 +352,9 @@ export default function VideoCard({
             target='_blank'
             rel='noopener noreferrer'
             onClick={(e) => e.stopPropagation()}
-            className='absolute top-2 left-2 opacity-0 -translate-x-2 transition-all duration-300 ease-in-out delay-100 group-hover:opacity-100 group-hover:translate-x-0'
+            className='absolute top-3 left-3 opacity-0 -translate-x-4 transition-all duration-500 ease-out delay-150 group-hover:opacity-100 group-hover:translate-x-0'
           >
-            <div className='bg-green-500 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-md hover:bg-green-600 hover:scale-[1.1] transition-all duration-300 ease-out'>
+            <div className='bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-large hover:shadow-glow hover:scale-110 transition-all duration-300 ease-out'>
               <Link size={16} />
             </div>
           </a>
@@ -357,29 +363,31 @@ export default function VideoCard({
 
       {/* 进度条 */}
       {config.showProgress && progress !== undefined && (
-        <div className='mt-1 h-1 w-full bg-gray-200 rounded-full overflow-hidden'>
-          <div
-            className='h-full bg-green-500 transition-all duration-500 ease-out'
-            style={{ width: `${progress}%` }}
-          />
+        <div className='px-3 py-2'>
+          <div className='h-1.5 w-full bg-gray-200/50 rounded-full overflow-hidden'>
+            <div
+              className='h-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-500 ease-out rounded-full'
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       )}
 
       {/* 标题与来源 */}
-      <div className='mt-2 text-center'>
+      <div className='p-3'>
         <div className='relative'>
-          <span className='block text-sm font-semibold truncate text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-green-600 dark:group-hover:text-green-400 peer'>
+          <span className='block text-sm font-semibold truncate text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-brand-600 dark:group-hover:text-brand-400 peer'>
             {actualTitle}
           </span>
-          {/* 自定义 tooltip */}
-          <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-200 ease-out delay-100 whitespace-nowrap pointer-events-none'>
+          {/* 现代 tooltip */}
+          <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 bg-gray-900/90 backdrop-blur-sm text-white text-xs rounded-xl shadow-large opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-300 ease-out delay-200 whitespace-nowrap pointer-events-none border border-white/20'>
             {actualTitle}
-            <div className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800'></div>
+            <div className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/90'></div>
           </div>
         </div>
         {config.showSourceName && source_name && (
-          <span className='block text-xs text-gray-500 dark:text-gray-400 mt-1'>
-            <span className='inline-block border rounded px-2 py-0.5 border-gray-500/60 dark:border-gray-400/60 transition-all duration-300 ease-in-out group-hover:border-green-500/60 group-hover:text-green-600 dark:group-hover:text-green-400'>
+          <span className='block text-xs text-gray-600 dark:text-gray-400 mt-2'>
+            <span className='inline-block bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-3 py-1 text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out group-hover:bg-brand-500/20 group-hover:border-brand-500/30 group-hover:text-brand-700 dark:group-hover:text-brand-300'>
               {source_name}
             </span>
           </span>

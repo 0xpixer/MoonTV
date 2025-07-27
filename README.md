@@ -1,10 +1,10 @@
 # MoonTV
 
 <div align="center">
-  <img src="public/logo.png" alt="LibreTV Logo" width="120">
+  <img src="public/logo.png" alt="MoonTV Logo" width="120">
 </div>
 
-> 🎬 **MoonTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 14** + **Tailwind&nbsp;CSS** + **TypeScript** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、本地/云端存储，让你可以随时随地畅享海量免费影视内容。
+> 🎬 **MoonTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 14** + **Tailwind&nbsp;CSS** + **TypeScript** 构建，采用现代玻璃拟态设计，支持多资源搜索、在线播放、收藏同步、播放记录、本地/云端存储，让你可以随时随地畅享海量免费影视内容。
 
 <div align="center">
 
@@ -13,6 +13,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-4.x-3178c6?logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Docker Ready](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+![Modern Design](https://img.shields.io/badge/Design-Glassmorphism-purple)
 
 </div>
 
@@ -20,14 +21,16 @@
 
 ## ✨ 功能特性
 
-- 🔍 **多源聚合搜索**：内置数十个免费资源站点，一次搜索立刻返回全源结果。
-- 📄 **丰富详情页**：支持剧集列表、演员、年份、简介等完整信息展示。
-- ▶️ **流畅在线播放**：集成 HLS.js & ArtPlayer。
-- ❤️ **收藏 + 继续观看**：支持 Redis/D1 存储，多端同步进度。
-- 📱 **PWA**：离线缓存、安装到桌面/主屏，移动端原生体验。
-- 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸。
-- 🚀 **极简部署**：一条 Docker 命令即可将完整服务跑起来，或免费部署到 Vercel 和 Cloudflare。
+- 🎨 **现代玻璃拟态设计**：采用最新的玻璃拟态设计语言，提供沉浸式的视觉体验
+- 🔍 **多源聚合搜索**：内置数十个免费资源站点，一次搜索立刻返回全源结果
+- 📄 **丰富详情页**：支持剧集列表、演员、年份、简介等完整信息展示
+- ▶️ **流畅在线播放**：集成 HLS.js & ArtPlayer，支持多种视频格式
+- ❤️ **收藏 + 继续观看**：支持 Redis/D1 存储，多端同步进度
+- 📱 **PWA**：离线缓存、安装到桌面/主屏，移动端原生体验
+- 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸
+- 🚀 **极简部署**：一条 Docker 命令即可将完整服务跑起来，或免费部署到 Vercel 和 Cloudflare
 - 👿 **智能去广告**：自动跳过视频中的切片广告（实验性）
+- ✨ **流畅动画**：精心设计的微交互和过渡动画，提升用户体验
 
 <details>
   <summary>点击查看项目截图</summary>
@@ -35,6 +38,26 @@
   <img src="public/screenshot2.png" alt="项目截图" style="max-width:600px">
   <img src="public/screenshot3.png" alt="项目截图" style="max-width:600px">
 </details>
+
+## 🎨 设计特色
+
+### 现代玻璃拟态设计
+- **玻璃效果**：半透明背景配合模糊效果，营造层次感
+- **渐变色彩**：品牌色与强调色的完美搭配
+- **柔和阴影**：多层次的阴影系统，增强立体感
+- **圆角设计**：统一的圆角规范，现代感十足
+
+### 流畅动画体验
+- **微交互**：悬停、点击、切换等状态的平滑过渡
+- **加载动画**：优雅的骨架屏和加载状态
+- **页面切换**：View Transitions API 支持的无缝页面切换
+- **响应式反馈**：即时的用户操作反馈
+
+### 视觉层次优化
+- **色彩系统**：统一的色彩规范和语义化使用
+- **字体层次**：清晰的字体大小和权重体系
+- **间距系统**：一致的间距规范，提升可读性
+- **组件设计**：可复用的现代化组件库
 
 ## 🗺 目录
 
@@ -55,9 +78,10 @@
 | 分类      | 主要依赖                                                                                              |
 | --------- | ----------------------------------------------------------------------------------------------------- |
 | 前端框架  | [Next.js 14](https://nextjs.org/) · App Router                                                        |
-| UI & 样式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/)                                                       |
+| UI & 样式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/) · Glassmorphism Design                               |
 | 语言      | TypeScript 4                                                                                          |
 | 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
+| 动画      | CSS Transitions · View Transitions API · Framer Motion                                                |
 | 代码质量  | ESLint · Prettier · Jest                                                                              |
 | 部署      | Docker · Vercel · CloudFlare pages                                                                    |
 
@@ -272,6 +296,12 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 - [x] 深色模式
 - [x] 持久化存储
 - [x] 多账户
+- [x] 现代玻璃拟态设计
+- [x] 流畅动画体验
+- [ ] 更多主题选择
+- [ ] 自定义布局
+- [ ] 高级搜索过滤
+- [ ] 播放列表功能
 
 ## 安全与隐私提醒
 
@@ -307,3 +337,4 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 - [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) — 提供强大的网页视频播放器。
 - [HLS.js](https://github.com/video-dev/hls.js) — 实现 HLS 流媒体在浏览器中的播放支持。
 - 感谢所有提供免费影视接口的站点。
+- 感谢现代设计趋势和玻璃拟态设计理念的启发。

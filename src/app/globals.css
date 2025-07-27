@@ -2,26 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 214, 219, 220;
+    --background-end-rgb: 255, 255, 255;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Modern scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100/50 dark:bg-gray-800/50 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gradient-to-b from-brand-400 to-brand-600 rounded-full;
+    transition: all 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply from-brand-500 to-brand-700;
+  }
+
+  /* Hide scrollbars on mobile */
+  @media (max-width: 767px) {
+    html,
+    body {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+@layer components {
+  /* Modern glassmorphism card component */
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-card-dark {
+    @apply bg-gray-900/20 backdrop-blur-xl border border-gray-700/30 shadow-soft;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Modern button styles */
+  .btn-primary {
+    @apply bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-medium px-6 py-3 rounded-xl shadow-medium hover:shadow-large transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply bg-white/10 backdrop-blur-sm border border-white/20 text-gray-700 dark:text-gray-200 font-medium px-6 py-3 rounded-xl shadow-soft hover:shadow-medium transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 hover:bg-white/20;
+  }
+
+  /* Modern input styles */
+  .input-modern {
+    @apply bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-gray-700 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all duration-300;
+  }
+
+  /* Modern card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-large hover:-translate-y-1;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent;
+  }
+
+  /* Animated gradient background */
+  .animated-gradient {
+    background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+}
+
 @layer utilities {
   .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
+    display: none;
+  }
+
+  /* Modern backdrop blur utilities */
+  .backdrop-blur-glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Text shadow utilities */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .text-shadow-md {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  .text-shadow-lg {
+    text-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   }
 }
 
-:root {
-  --foreground-rgb: 255, 255, 255;
-}
-
+/* Enhanced body background */
 html,
 body {
   height: 100%;
   overflow-x: hidden;
-  /* 阻止 iOS Safari 拉动回弹 */
   overscroll-behavior: none;
 }
 
@@ -29,48 +146,46 @@ body {
   color: rgb(var(--foreground-rgb));
 }
 
+/* Modern gradient background for light mode */
 html:not(.dark) body {
   background: linear-gradient(
-    180deg,
-    #e6f3fb 0%,
-    #eaf3f7 18%,
-    #f7f7f3 38%,
-    #e9ecef 60%,
-    #dbe3ea 80%,
-    #d3dde6 100%
+    135deg,
+    #667eea 0%,
+    #764ba2 25%,
+    #f093fb 50%,
+    #f5576c 75%,
+    #4facfe 100%
   );
   background-attachment: fixed;
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
 }
 
-/* 自定义滚动条样式 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Dark mode background */
+html.dark body {
+  background: linear-gradient(
+    135deg,
+    #0f0f23 0%,
+    #1a1a2e 25%,
+    #16213e 50%,
+    #0f3460 75%,
+    #533483 100%
+  );
+  background-attachment: fixed;
+  background-size: 400% 400%;
+  animation: gradientShift 25s ease infinite;
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.1);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.5);
-}
-
-/* 视频卡片悬停效果 */
+/* Enhanced video card hover effects */
 .video-card-hover {
-  transition: transform 0.3s ease;
+  @apply transition-all duration-500 ease-out;
 }
 
 .video-card-hover:hover {
-  transform: scale(1.05);
+  @apply transform scale-[1.05] shadow-large;
 }
 
-/* 渐变遮罩 */
+/* Modern gradient overlay */
 .gradient-overlay {
   background: linear-gradient(
     to bottom,
@@ -79,31 +194,7 @@ html:not(.dark) body {
   );
 }
 
-/* 隐藏移动端（<768px）垂直滚动条 */
-@media (max-width: 767px) {
-  html,
-  body {
-    -ms-overflow-style: none; /* IE & Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar {
-    display: none; /* Chrome Safari */
-  }
-}
-
-/* 隐藏所有滚动条（兼容 WebKit、Firefox、IE/Edge） */
-* {
-  -ms-overflow-style: none; /* IE & Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-*::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-/* View Transitions API 动画 */
+/* Enhanced View Transitions API animations */
 @keyframes slide-from-top {
   from {
     clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
@@ -129,38 +220,32 @@ html:not(.dark) body {
   animation-fill-mode: both;
 }
 
-/*
-  切换时，旧的视图不应该有动画，它应该在下面，等待被新的视图覆盖。
-  这可以防止在动画完成前，页面底部提前变色。
-*/
 ::view-transition-old(root) {
   animation: none;
 }
 
-/* 从浅色到深色：新内容（深色）从顶部滑入 */
 html.dark::view-transition-new(root) {
   animation-name: slide-from-top;
 }
 
-/* 从深色到浅色：新内容（浅色）从底部滑入 */
 html:not(.dark)::view-transition-new(root) {
   animation-name: slide-from-bottom;
 }
 
-/* 强制播放器内部的 video 元素高度为 100%，并保持内容完整显示 */
+/* Enhanced video player styling */
 div[data-media-provider] video {
   height: 100%;
   object-fit: contain;
 }
 
 .art-poster {
-  background-size: contain !important; /* 使图片完整展示 */
-  background-position: center center !important; /* 居中显示 */
-  background-repeat: no-repeat !important; /* 防止重复 */
-  background-color: #000 !important; /* 其余区域填充为黑色 */
+  background-size: contain !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-color: #000 !important;
 }
 
-/* 隐藏移动端竖屏时的 pip 按钮 */
+/* Mobile optimizations */
 @media (max-width: 768px) {
   .art-control-pip {
     display: none !important;
@@ -173,4 +258,45 @@ div[data-media-provider] video {
   .art-control-volume {
     display: none !important;
   }
+}
+
+/* Modern loading animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Modern focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900;
+}
+
+/* Enhanced typography */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Modern spacing utilities */
+.space-y-modern > * + * {
+  margin-top: 1.5rem;
+}
+
+.space-x-modern > * + * {
+  margin-left: 1.5rem;
 }
