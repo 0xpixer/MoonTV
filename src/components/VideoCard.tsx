@@ -187,13 +187,14 @@ export default function VideoCard({
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     if (from === 'douban' && douban_id) {
-      router.push(`/search?q=${encodeURIComponent(actualTitle)}&douban_id=${douban_id}`);
+      // Douban cards go directly to play page, which will search for sources
+      router.push(`/play?title=${encodeURIComponent(actualTitle)}&year=${encodeURIComponent(year || '')}`);
     } else if (from === 'search' && isAggregate && items) {
       router.push(`/play?q=${encodeURIComponent(query)}&items=${encodeURIComponent(JSON.stringify(items))}`);
     } else if (source && id) {
       router.push(`/play?source=${source}&id=${id}&title=${encodeURIComponent(actualTitle)}`);
     }
-  }, [from, douban_id, actualTitle, isAggregate, items, query, source, id, router]);
+  }, [from, douban_id, actualTitle, year, isAggregate, items, query, source, id, router]);
 
   return (
     <div 
