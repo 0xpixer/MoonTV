@@ -217,7 +217,7 @@ export default function VideoCard({
         />
         
         {/* 占位符 */}
-        <ImagePlaceholder />
+        <ImagePlaceholder aspectRatio="aspect-[2/3]" />
 
         {/* 悬停遮罩 - Netflix style */}
         <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100' />
