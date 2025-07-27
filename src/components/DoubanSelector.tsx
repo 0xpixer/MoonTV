@@ -15,6 +15,15 @@ interface DoubanSelectorProps {
   secondarySelection?: string;
   onPrimaryChange: (value: string) => void;
   onSecondaryChange: (value: string) => void;
+  // New props for additional selectors
+  genreSelection?: string;
+  regionSelection?: string;
+  eraSelection?: string;
+  sortSelection?: string;
+  onGenreChange?: (value: string) => void;
+  onRegionChange?: (value: string) => void;
+  onEraChange?: (value: string) => void;
+  onSortChange?: (value: string) => void;
 }
 
 const DoubanSelector: React.FC<DoubanSelectorProps> = ({
@@ -23,6 +32,15 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
   secondarySelection,
   onPrimaryChange,
   onSecondaryChange,
+  // New props with defaults
+  genreSelection = '全部',
+  regionSelection = '全部',
+  eraSelection = '全部',
+  sortSelection = '默认',
+  onGenreChange = () => {},
+  onRegionChange = () => {},
+  onEraChange = () => {},
+  onSortChange = () => {},
 }) => {
   // 为不同的选择器创建独立的refs和状态
   const primaryContainerRef = useRef<HTMLDivElement>(null);
@@ -35,6 +53,35 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
   const secondaryContainerRef = useRef<HTMLDivElement>(null);
   const secondaryButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [secondaryIndicatorStyle, setSecondaryIndicatorStyle] = useState<{
+    left: number;
+    width: number;
+  }>({ left: 0, width: 0 });
+
+  // New refs and states for additional selectors
+  const genreContainerRef = useRef<HTMLDivElement>(null);
+  const genreButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [genreIndicatorStyle, setGenreIndicatorStyle] = useState<{
+    left: number;
+    width: number;
+  }>({ left: 0, width: 0 });
+
+  const regionContainerRef = useRef<HTMLDivElement>(null);
+  const regionButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [regionIndicatorStyle, setRegionIndicatorStyle] = useState<{
+    left: number;
+    width: number;
+  }>({ left: 0, width: 0 });
+
+  const eraContainerRef = useRef<HTMLDivElement>(null);
+  const eraButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [eraIndicatorStyle, setEraIndicatorStyle] = useState<{
+    left: number;
+    width: number;
+  }>({ left: 0, width: 0 });
+
+  const sortContainerRef = useRef<HTMLDivElement>(null);
+  const sortButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [sortIndicatorStyle, setSortIndicatorStyle] = useState<{
     left: number;
     width: number;
   }>({ left: 0, width: 0 });
@@ -54,6 +101,56 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
     { label: '欧美', value: '欧美' },
     { label: '韩国', value: '韩国' },
     { label: '日本', value: '日本' },
+  ];
+
+  // 新增的电影类型选择器选项
+  const movieGenreOptions: SelectorOption[] = [
+    { label: '全部', value: '全部' },
+    { label: '动作', value: '动作' },
+    { label: '喜剧', value: '喜剧' },
+    { label: '爱情', value: '爱情' },
+    { label: '科幻', value: '科幻' },
+    { label: '恐怖', value: '恐怖' },
+    { label: '悬疑', value: '悬疑' },
+    { label: '剧情', value: '剧情' },
+    { label: '动画', value: '动画' },
+    { label: '纪录片', value: '纪录片' },
+  ];
+
+  // 新增的电影地区选择器选项
+  const movieRegionOptions: SelectorOption[] = [
+    { label: '全部', value: '全部' },
+    { label: '中国大陆', value: '中国大陆' },
+    { label: '中国香港', value: '中国香港' },
+    { label: '中国台湾', value: '中国台湾' },
+    { label: '美国', value: '美国' },
+    { label: '英国', value: '英国' },
+    { label: '法国', value: '法国' },
+    { label: '德国', value: '德国' },
+    { label: '日本', value: '日本' },
+    { label: '韩国', value: '韩国' },
+    { label: '印度', value: '印度' },
+  ];
+
+  // 新增的电影年代选择器选项
+  const movieEraOptions: SelectorOption[] = [
+    { label: '全部', value: '全部' },
+    { label: '2020年代', value: '2020' },
+    { label: '2010年代', value: '2010' },
+    { label: '2000年代', value: '2000' },
+    { label: '1990年代', value: '1990' },
+    { label: '1980年代', value: '1980' },
+    { label: '1970年代', value: '1970' },
+    { label: '1960年代', value: '1960' },
+    { label: '更早', value: 'earlier' },
+  ];
+
+  // 新增的电影排序选择器选项
+  const movieSortOptions: SelectorOption[] = [
+    { label: '默认', value: '默认' },
+    { label: '评分最高', value: 'rating' },
+    { label: '最新上映', value: 'time' },
+    { label: '最多评价', value: 'votes' },
   ];
 
   // 电视剧选择器选项
@@ -148,6 +245,53 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
         setSecondaryIndicatorStyle
       );
     }
+
+    // 新增选择器的初始位置计算
+    if (type === 'movie') {
+      // 类型选择器
+      const genreActiveIndex = movieGenreOptions.findIndex(
+        (opt) => opt.value === genreSelection
+      );
+      updateIndicatorPosition(
+        genreActiveIndex,
+        genreContainerRef,
+        genreButtonRefs,
+        setGenreIndicatorStyle
+      );
+
+      // 地区选择器
+      const regionActiveIndex = movieRegionOptions.findIndex(
+        (opt) => opt.value === regionSelection
+      );
+      updateIndicatorPosition(
+        regionActiveIndex,
+        regionContainerRef,
+        regionButtonRefs,
+        setRegionIndicatorStyle
+      );
+
+      // 年代选择器
+      const eraActiveIndex = movieEraOptions.findIndex(
+        (opt) => opt.value === eraSelection
+      );
+      updateIndicatorPosition(
+        eraActiveIndex,
+        eraContainerRef,
+        eraButtonRefs,
+        setEraIndicatorStyle
+      );
+
+      // 排序选择器
+      const sortActiveIndex = movieSortOptions.findIndex(
+        (opt) => opt.value === sortSelection
+      );
+      updateIndicatorPosition(
+        sortActiveIndex,
+        sortContainerRef,
+        sortButtonRefs,
+        setSortIndicatorStyle
+      );
+    }
   }, [type]); // 只在type变化时重新计算
 
   // 监听主选择器变化
@@ -199,20 +343,109 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
     }
   }, [secondarySelection]);
 
+  // 监听新增选择器变化
+  useEffect(() => {
+    if (type === 'movie') {
+      const genreActiveIndex = movieGenreOptions.findIndex(
+        (opt) => opt.value === genreSelection
+      );
+      const cleanup = updateIndicatorPosition(
+        genreActiveIndex,
+        genreContainerRef,
+        genreButtonRefs,
+        setGenreIndicatorStyle
+      );
+      return cleanup;
+    }
+  }, [genreSelection]);
+
+  useEffect(() => {
+    if (type === 'movie') {
+      const regionActiveIndex = movieRegionOptions.findIndex(
+        (opt) => opt.value === regionSelection
+      );
+      const cleanup = updateIndicatorPosition(
+        regionActiveIndex,
+        regionContainerRef,
+        regionButtonRefs,
+        setRegionIndicatorStyle
+      );
+      return cleanup;
+    }
+  }, [regionSelection]);
+
+  useEffect(() => {
+    if (type === 'movie') {
+      const eraActiveIndex = movieEraOptions.findIndex(
+        (opt) => opt.value === eraSelection
+      );
+      const cleanup = updateIndicatorPosition(
+        eraActiveIndex,
+        eraContainerRef,
+        eraButtonRefs,
+        setEraIndicatorStyle
+      );
+      return cleanup;
+    }
+  }, [eraSelection]);
+
+  useEffect(() => {
+    if (type === 'movie') {
+      const sortActiveIndex = movieSortOptions.findIndex(
+        (opt) => opt.value === sortSelection
+      );
+      const cleanup = updateIndicatorPosition(
+        sortActiveIndex,
+        sortContainerRef,
+        sortButtonRefs,
+        setSortIndicatorStyle
+      );
+      return cleanup;
+    }
+  }, [sortSelection]);
+
   // 渲染胶囊式选择器
   const renderCapsuleSelector = (
     options: SelectorOption[],
     activeValue: string | undefined,
     onChange: (value: string) => void,
-    isPrimary = false
+    selectorType: 'primary' | 'secondary' | 'genre' | 'region' | 'era' | 'sort' = 'secondary'
   ) => {
-    const containerRef = isPrimary
-      ? primaryContainerRef
-      : secondaryContainerRef;
-    const buttonRefs = isPrimary ? primaryButtonRefs : secondaryButtonRefs;
-    const indicatorStyle = isPrimary
-      ? primaryIndicatorStyle
-      : secondaryIndicatorStyle;
+    let containerRef: React.RefObject<HTMLDivElement>;
+    let buttonRefs: React.MutableRefObject<(HTMLButtonElement | null)[]>;
+    let indicatorStyle: { left: number; width: number };
+
+    switch (selectorType) {
+      case 'primary':
+        containerRef = primaryContainerRef;
+        buttonRefs = primaryButtonRefs;
+        indicatorStyle = primaryIndicatorStyle;
+        break;
+      case 'genre':
+        containerRef = genreContainerRef;
+        buttonRefs = genreButtonRefs;
+        indicatorStyle = genreIndicatorStyle;
+        break;
+      case 'region':
+        containerRef = regionContainerRef;
+        buttonRefs = regionButtonRefs;
+        indicatorStyle = regionIndicatorStyle;
+        break;
+      case 'era':
+        containerRef = eraContainerRef;
+        buttonRefs = eraButtonRefs;
+        indicatorStyle = eraIndicatorStyle;
+        break;
+      case 'sort':
+        containerRef = sortContainerRef;
+        buttonRefs = sortButtonRefs;
+        indicatorStyle = sortIndicatorStyle;
+        break;
+      default:
+        containerRef = secondaryContainerRef;
+        buttonRefs = secondaryButtonRefs;
+        indicatorStyle = secondaryIndicatorStyle;
+    }
 
     return (
       <div
@@ -255,10 +488,10 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
 
   return (
     <div className='space-y-4 sm:space-y-6'>
-      {/* 电影类型 - 显示两级选择器 */}
+      {/* 电影类型 - 显示多级选择器 */}
       {type === 'movie' && (
         <div className='space-y-3 sm:space-y-4'>
-          {/* 一级选择器 */}
+          {/* 一级选择器 - 分类 */}
           <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
             <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
               分类
@@ -268,12 +501,12 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
                 moviePrimaryOptions,
                 primarySelection || moviePrimaryOptions[0].value,
                 onPrimaryChange,
-                true
+                'primary'
               )}
             </div>
           </div>
 
-          {/* 二级选择器 */}
+          {/* 二级选择器 - 地区 */}
           <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
             <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
               地区
@@ -283,7 +516,67 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
                 movieSecondaryOptions,
                 secondarySelection || movieSecondaryOptions[0].value,
                 onSecondaryChange,
-                false
+                'secondary'
+              )}
+            </div>
+          </div>
+
+          {/* 三级选择器 - 类型 */}
+          <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
+            <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
+              类型
+            </span>
+            <div className='overflow-x-auto'>
+              {renderCapsuleSelector(
+                movieGenreOptions,
+                genreSelection,
+                onGenreChange,
+                'genre'
+              )}
+            </div>
+          </div>
+
+          {/* 四级选择器 - 地区细分 */}
+          <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
+            <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
+              地区细分
+            </span>
+            <div className='overflow-x-auto'>
+              {renderCapsuleSelector(
+                movieRegionOptions,
+                regionSelection,
+                onRegionChange,
+                'region'
+              )}
+            </div>
+          </div>
+
+          {/* 五级选择器 - 年代 */}
+          <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
+            <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
+              年代
+            </span>
+            <div className='overflow-x-auto'>
+              {renderCapsuleSelector(
+                movieEraOptions,
+                eraSelection,
+                onEraChange,
+                'era'
+              )}
+            </div>
+          </div>
+
+          {/* 六级选择器 - 排序 */}
+          <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
+            <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
+              排序
+            </span>
+            <div className='overflow-x-auto'>
+              {renderCapsuleSelector(
+                movieSortOptions,
+                sortSelection,
+                onSortChange,
+                'sort'
               )}
             </div>
           </div>
@@ -301,7 +594,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               tvOptions,
               secondarySelection || tvOptions[0].value,
               onSecondaryChange,
-              false
+              'secondary'
             )}
           </div>
         </div>
@@ -318,7 +611,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               showOptions,
               secondarySelection || showOptions[0].value,
               onSecondaryChange,
-              false
+              'secondary'
             )}
           </div>
         </div>

@@ -5,6 +5,10 @@ interface DoubanCategoriesParams {
   kind: 'tv' | 'movie';
   category: string;
   type: string;
+  genre?: string;
+  region?: string;
+  era?: string;
+  sort?: string;
   pageLimit?: number;
   pageStart?: number;
 }

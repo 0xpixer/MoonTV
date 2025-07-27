@@ -39,6 +39,12 @@ function DoubanPageClient() {
     return '全部';
   });
 
+  // 新增的选择器状态
+  const [genreSelection, setGenreSelection] = useState<string>('全部');
+  const [regionSelection, setRegionSelection] = useState<string>('全部');
+  const [eraSelection, setEraSelection] = useState<string>('全部');
+  const [sortSelection, setSortSelection] = useState<string>('默认');
+
   // 初始化时标记选择器为准备好状态
   useEffect(() => {
     // 短暂延迟确保初始状态设置完成
@@ -61,15 +67,31 @@ function DoubanPageClient() {
     if (type === 'movie') {
       setPrimarySelection('热门');
       setSecondarySelection('全部');
+      setGenreSelection('全部');
+      setRegionSelection('全部');
+      setEraSelection('全部');
+      setSortSelection('默认');
     } else if (type === 'tv') {
       setPrimarySelection('');
       setSecondarySelection('tv');
+      setGenreSelection('全部');
+      setRegionSelection('全部');
+      setEraSelection('全部');
+      setSortSelection('默认');
     } else if (type === 'show') {
       setPrimarySelection('');
       setSecondarySelection('show');
+      setGenreSelection('全部');
+      setRegionSelection('全部');
+      setEraSelection('全部');
+      setSortSelection('默认');
     } else {
       setPrimarySelection('');
       setSecondarySelection('全部');
+      setGenreSelection('全部');
+      setRegionSelection('全部');
+      setEraSelection('全部');
+      setSortSelection('默认');
     }
 
     // 使用短暂延迟确保状态更新完成后标记选择器准备好
@@ -97,16 +119,21 @@ function DoubanPageClient() {
         };
       }
 
-      // 电影类型保持原逻辑
+      // 电影类型保持原逻辑，但可以扩展支持新的参数
       return {
         kind: type as 'tv' | 'movie',
         category: primarySelection,
         type: secondarySelection,
+        // 新增参数（如果API支持的话）
+        genre: genreSelection !== '全部' ? genreSelection : undefined,
+        region: regionSelection !== '全部' ? regionSelection : undefined,
+        era: eraSelection !== '全部' ? eraSelection : undefined,
+        sort: sortSelection !== '默认' ? sortSelection : undefined,
         pageLimit: 25,
         pageStart,
       };
     },
-    [type, primarySelection, secondarySelection]
+    [type, primarySelection, secondarySelection, genreSelection, regionSelection, eraSelection, sortSelection]
   );
 
   // 防抖的数据加载函数
@@ -125,7 +152,7 @@ function DoubanPageClient() {
     } catch (err) {
       console.error(err);
     }
-  }, [type, primarySelection, secondarySelection, getRequestParams]);
+  }, [type, primarySelection, secondarySelection, genreSelection, regionSelection, eraSelection, sortSelection, getRequestParams]);
 
   // 只在选择器准备好后才加载数据
   useEffect(() => {
@@ -161,6 +188,10 @@ function DoubanPageClient() {
     type,
     primarySelection,
     secondarySelection,
+    genreSelection,
+    regionSelection,
+    eraSelection,
+    sortSelection,
     loadInitialData,
   ]);
 
@@ -190,7 +221,7 @@ function DoubanPageClient() {
 
       fetchMoreData();
     }
-  }, [currentPage, type, primarySelection, secondarySelection]);
+  }, [currentPage, type, primarySelection, secondarySelection, genreSelection, regionSelection, eraSelection, sortSelection, getRequestParams]);
 
   // 设置滚动监听
   useEffect(() => {
@@ -246,6 +277,47 @@ function DoubanPageClient() {
     [secondarySelection]
   );
 
+  // 新增的选择器处理函数
+  const handleGenreChange = useCallback(
+    (value: string) => {
+      if (value !== genreSelection) {
+        setLoading(true);
+        setGenreSelection(value);
+      }
+    },
+    [genreSelection]
+  );
+
+  const handleRegionChange = useCallback(
+    (value: string) => {
+      if (value !== regionSelection) {
+        setLoading(true);
+        setRegionSelection(value);
+      }
+    },
+    [regionSelection]
+  );
+
+  const handleEraChange = useCallback(
+    (value: string) => {
+      if (value !== eraSelection) {
+        setLoading(true);
+        setEraSelection(value);
+      }
+    },
+    [eraSelection]
+  );
+
+  const handleSortChange = useCallback(
+    (value: string) => {
+      if (value !== sortSelection) {
+        setLoading(true);
+        setSortSelection(value);
+      }
+    },
+    [sortSelection]
+  );
+
   const getPageTitle = () => {
     // 根据 type 生成标题
     return type === 'movie' ? '电影' : type === 'tv' ? '电视剧' : '综艺';
@@ -283,6 +355,14 @@ function DoubanPageClient() {
               secondarySelection={secondarySelection}
               onPrimaryChange={handlePrimaryChange}
               onSecondaryChange={handleSecondaryChange}
+              genreSelection={genreSelection}
+              regionSelection={regionSelection}
+              eraSelection={eraSelection}
+              sortSelection={sortSelection}
+              onGenreChange={handleGenreChange}
+              onRegionChange={handleRegionChange}
+              onEraChange={handleEraChange}
+              onSortChange={handleSortChange}
             />
           </div>
         </div>
