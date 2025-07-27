@@ -81,7 +81,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${inter.className} min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-dark dark:via-dark-lighter dark:to-dark-card text-gray-900 dark:text-gray-100 antialiased`}
+        className={`${inter.className} min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased`}
       >
         <ThemeProvider
           attribute='class'

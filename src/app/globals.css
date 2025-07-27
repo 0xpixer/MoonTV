@@ -29,12 +29,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gradient-to-b from-brand-400 to-brand-600 rounded-full;
+    @apply bg-brand-500 rounded-full;
     transition: all 0.3s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply from-brand-500 to-brand-700;
+    @apply bg-brand-600;
   }
 
   /* Hide scrollbars on mobile */
@@ -68,7 +68,7 @@
 
   /* Modern button styles */
   .btn-primary {
-    @apply bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-medium px-6 py-3 rounded-xl shadow-medium hover:shadow-large transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-xl shadow-medium hover:shadow-large transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0;
   }
 
   .btn-secondary {
@@ -85,22 +85,9 @@
     @apply transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-large hover:-translate-y-1;
   }
 
-  /* Gradient text */
+  /* Clean text styling */
   .gradient-text {
-    @apply bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent;
-  }
-
-  /* Animated gradient background */
-  .animated-gradient {
-    background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-  }
-
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    @apply text-brand-500 dark:text-brand-400 font-semibold;
   }
 }
 
@@ -146,34 +133,14 @@ body {
   color: rgb(var(--foreground-rgb));
 }
 
-/* Modern gradient background for light mode */
+/* Clean background for light mode */
 html:not(.dark) body {
-  background: linear-gradient(
-    135deg,
-    #667eea 0%,
-    #764ba2 25%,
-    #f093fb 50%,
-    #f5576c 75%,
-    #4facfe 100%
-  );
-  background-attachment: fixed;
-  background-size: 400% 400%;
-  animation: gradientShift 20s ease infinite;
+  background: #f8fafc;
 }
 
-/* Dark mode background */
+/* Clean background for dark mode */
 html.dark body {
-  background: linear-gradient(
-    135deg,
-    #0f0f23 0%,
-    #1a1a2e 25%,
-    #16213e 50%,
-    #0f3460 75%,
-    #533483 100%
-  );
-  background-attachment: fixed;
-  background-size: 400% 400%;
-  animation: gradientShift 25s ease infinite;
+  background: #111827;
 }
 
 /* Enhanced video card hover effects */
@@ -185,7 +152,7 @@ html.dark body {
   @apply transform scale-[1.05] shadow-large;
 }
 
-/* Modern gradient overlay */
+/* Clean overlay */
 .gradient-overlay {
   background: linear-gradient(
     to bottom,

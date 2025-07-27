@@ -69,7 +69,7 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
       {/* 滑动的现代指示器 */}
       {indicatorStyle.width > 0 && (
         <div
-          className='absolute top-1.5 bottom-1.5 bg-gradient-to-r from-brand-500 to-accent-500 rounded-full shadow-medium transition-all duration-500 ease-out'
+          className='absolute top-1.5 bottom-1.5 bg-brand-500 rounded-full shadow-medium transition-all duration-500 ease-out'
           style={{
             left: `${indicatorStyle.left}px`,
             width: `${indicatorStyle.width}px`,

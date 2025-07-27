@@ -98,299 +98,211 @@ export default function VideoCard({
 
   const actualTitle = aggregateData?.first.title ?? title;
   const actualPoster = aggregateData?.first.poster ?? poster;
-  const actualSource = aggregateData?.first.source ?? source;
-  const actualId = aggregateData?.first.id ?? id;
-  const actualDoubanId = String(
-    aggregateData?.mostFrequentDoubanId ?? douban_id
-  );
-  const actualEpisodes = aggregateData?.mostFrequentEpisodes ?? episodes;
-  const actualYear = aggregateData?.first.year ?? year;
-  const actualQuery = query || '';
-  const actualSearchType = isAggregate
-    ? aggregateData?.first.episodes?.length === 1
-      ? 'movie'
-      : 'tv'
-    : type;
+
+  // 生成存储键
+  const storageKey = useMemo(() => {
+    if (from === 'douban' && douban_id) {
+      return `douban+${douban_id}`;
+    }
+    if (source && id) {
+      return `${source}+${id}`;
+    }
+    return null;
+  }, [from, douban_id, source, id]);
 
   // 获取收藏状态
-  useEffect(() => {
-    if (from === 'douban' || !actualSource || !actualId) return;
-
-    const fetchFavoriteStatus = async () => {
-      try {
-        const fav = await isFavorited(actualSource, actualId);
-        setFavorited(fav);
-      } catch (err) {
-        throw new Error('检查收藏状态失败');
-      }
-    };
-
-    fetchFavoriteStatus();
-
-    // 监听收藏状态更新事件
-    const storageKey = generateStorageKey(actualSource, actualId);
-    const unsubscribe = subscribeToDataUpdates(
-      'favoritesUpdated',
-      (newFavorites: Record<string, any>) => {
-        // 检查当前项目是否在新的收藏列表中
-        const isNowFavorited = !!newFavorites[storageKey];
-        setFavorited(isNowFavorited);
-      }
-    );
-
-    return unsubscribe;
-  }, [from, actualSource, actualId]);
-
-  const handleToggleFavorite = useCallback(
-    async (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (from === 'douban' || !actualSource || !actualId) return;
-      try {
-        if (favorited) {
-          // 如果已收藏，删除收藏
-          await deleteFavorite(actualSource, actualId);
-          setFavorited(false);
-        } else {
-          // 如果未收藏，添加收藏
-          await saveFavorite(actualSource, actualId, {
-            title: actualTitle,
-            source_name: source_name || '',
-            year: actualYear || '',
-            cover: actualPoster,
-            total_episodes: actualEpisodes ?? 1,
-            save_time: Date.now(),
-          });
-          setFavorited(true);
-        }
-      } catch (err) {
-        throw new Error('切换收藏状态失败');
-      }
-    },
-    [
-      from,
-      actualSource,
-      actualId,
-      actualTitle,
-      source_name,
-      actualYear,
-      actualPoster,
-      actualEpisodes,
-      favorited,
-    ]
-  );
-
-  const handleDeleteRecord = useCallback(
-    async (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (from !== 'playrecord' || !actualSource || !actualId) return;
-      try {
-        await deletePlayRecord(actualSource, actualId);
-        onDelete?.();
-      } catch (err) {
-        throw new Error('删除播放记录失败');
-      }
-    },
-    [from, actualSource, actualId, onDelete]
-  );
-
-  const handleClick = useCallback(() => {
-    if (from === 'douban') {
-      router.push(
-        `/play?title=${encodeURIComponent(actualTitle.trim())}${
-          actualYear ? `&year=${actualYear}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}`
-      );
-    } else if (actualSource && actualId) {
-      router.push(
-        `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
-          actualTitle
-        )}${actualYear ? `&year=${actualYear}` : ''}${
-          isAggregate ? '&prefer=true' : ''
-        }${
-          actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}`
-      );
+  const fetchFavoriteStatus = async () => {
+    if (!storageKey) return;
+    try {
+      const status = await isFavorited(storageKey);
+      setFavorited(status);
+    } catch (error) {
+      console.error('Failed to fetch favorite status:', error);
     }
-  }, [
-    from,
-    actualSource,
-    actualId,
-    router,
-    actualTitle,
-    actualYear,
-    isAggregate,
-    actualQuery,
-    actualSearchType,
-  ]);
+  };
 
-  const config = useMemo(() => {
-    const configs = {
-      playrecord: {
-        showSourceName: true,
-        showProgress: true,
-        showPlayButton: true,
-        showHeart: true,
-        showCheckCircle: true,
-        showDoubanLink: false,
-        showRating: false,
-      },
-      favorite: {
-        showSourceName: true,
-        showProgress: false,
-        showPlayButton: true,
-        showHeart: true,
-        showCheckCircle: false,
-        showDoubanLink: false,
-        showRating: false,
-      },
-      search: {
-        showSourceName: true,
-        showProgress: false,
-        showPlayButton: true,
-        showHeart: !isAggregate,
-        showCheckCircle: false,
-        showDoubanLink: !!actualDoubanId,
-        showRating: false,
-      },
-      douban: {
-        showSourceName: false,
-        showProgress: false,
-        showPlayButton: true,
-        showHeart: false,
-        showCheckCircle: false,
-        showDoubanLink: true,
-        showRating: !!rate,
-      },
-    };
-    return configs[from] || configs.search;
-  }, [from, isAggregate, actualDoubanId, rate]);
+  // 订阅收藏状态更新
+  useEffect(() => {
+    if (!storageKey) return;
+    fetchFavoriteStatus();
+    const unsubscribe = subscribeToDataUpdates('favoritesUpdated', () => {
+      fetchFavoriteStatus();
+    });
+    return unsubscribe;
+  }, [storageKey]);
+
+  // 处理收藏/取消收藏
+  const handleFavoriteToggle = useCallback(async () => {
+    if (!storageKey || isLoading) return;
+    setIsLoading(true);
+    try {
+      if (favorited) {
+        await deleteFavorite(storageKey);
+        setFavorited(false);
+      } else {
+        await saveFavorite(storageKey, {
+          title: actualTitle,
+          cover: actualPoster,
+          total_episodes: episodes || 0,
+          source_name: source_name || '',
+          save_time: Date.now(),
+          search_title: query,
+        });
+        setFavorited(true);
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [storageKey, favorited, isLoading, actualTitle, actualPoster, episodes, source_name, query]);
+
+  // 处理播放记录删除
+  const handleDeletePlayRecord = useCallback(async () => {
+    if (!storageKey || isLoading) return;
+    setIsLoading(true);
+    try {
+      await deletePlayRecord(storageKey);
+      onDelete?.();
+    } catch (error) {
+      console.error('Failed to delete play record:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [storageKey, isLoading, onDelete]);
+
+  // 处理点击事件
+  const handleClick = useCallback(() => {
+    if (from === 'douban' && douban_id) {
+      router.push(`/search?q=${encodeURIComponent(actualTitle)}&douban_id=${douban_id}`);
+    } else if (from === 'search' && isAggregate && items) {
+      router.push(`/play?q=${encodeURIComponent(query)}&items=${encodeURIComponent(JSON.stringify(items))}`);
+    } else if (source && id) {
+      router.push(`/play?source=${source}&id=${id}&title=${encodeURIComponent(actualTitle)}`);
+    }
+  }, [from, douban_id, actualTitle, isAggregate, items, query, source, id, router]);
 
   return (
-    <div
-      className='group relative w-full rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft cursor-pointer transition-all duration-500 ease-out hover:scale-[1.05] hover:shadow-large hover:-translate-y-2 hover:z-[500] overflow-hidden'
-      onClick={handleClick}
-    >
+    <div className='group relative rounded-2xl glass-card dark:glass-card-dark shadow-soft video-card-hover overflow-hidden'>
       {/* 海报容器 */}
-      <div className='relative aspect-[2/3] overflow-hidden rounded-t-2xl'>
-        {/* 骨架屏 */}
-        {!isLoading && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
-        {/* 图片 */}
+      <div className='relative aspect-[2/3] w-full overflow-hidden rounded-t-2xl'>
+        {/* 海报图片 */}
         <Image
           src={processImageUrl(actualPoster)}
           alt={actualTitle}
           fill
           className='object-cover transition-transform duration-500 group-hover:scale-110'
-          referrerPolicy='no-referrer'
-          onLoadingComplete={() => setIsLoading(true)}
+          sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
         />
+        
+        {/* 占位符 */}
+        <ImagePlaceholder />
 
-        {/* 现代渐变遮罩 */}
-        <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100' />
+        {/* 悬停遮罩 */}
+        <div className='absolute inset-0 bg-black/80 opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100' />
 
         {/* 播放按钮 */}
-        {config.showPlayButton && (
-          <div className='absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 ease-out delay-100 group-hover:opacity-100 group-hover:scale-100'>
-            <div className='bg-white/20 backdrop-blur-sm rounded-full p-4 border border-white/30 shadow-large'>
-              <PlayCircleIcon
-                size={40}
-                strokeWidth={1.5}
-                className='text-white fill-white/20 transition-all duration-300 ease-out group-hover:fill-brand-400 group-hover:scale-110'
-              />
-            </div>
+        <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+          <div className='bg-white/20 backdrop-blur-sm border border-white/30 rounded-full p-4 shadow-large'>
+            <PlayCircleIcon className='w-8 h-8 text-white' />
           </div>
-        )}
+        </div>
 
         {/* 操作按钮 */}
-        {(config.showHeart || config.showCheckCircle) && (
-          <div className='absolute bottom-4 right-4 flex gap-3 opacity-0 translate-y-4 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0'>
-            {config.showCheckCircle && (
-              <div className='bg-white/20 backdrop-blur-sm rounded-full p-2 border border-white/30 shadow-medium'>
-                <CheckCircle
-                  onClick={handleDeleteRecord}
-                  size={18}
-                  className='text-white transition-all duration-300 ease-out hover:stroke-brand-400 hover:scale-110'
-                />
-              </div>
-            )}
-            {config.showHeart && (
-              <div className='bg-white/20 backdrop-blur-sm rounded-full p-2 border border-white/30 shadow-medium'>
-                <Heart
-                  onClick={handleToggleFavorite}
-                  size={18}
-                  className={`transition-all duration-300 ease-out ${
-                    favorited
-                      ? 'fill-red-500 stroke-red-500'
-                      : 'fill-transparent stroke-white hover:stroke-red-400'
-                  } hover:scale-110`}
-                />
-              </div>
-            )}
-          </div>
-        )}
+        <div className='absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+          {/* 收藏按钮 */}
+          {from !== 'favorite' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFavoriteToggle();
+              }}
+              disabled={isLoading}
+              className='bg-white/20 backdrop-blur-sm border border-white/30 text-white p-2 rounded-full shadow-large hover:scale-110 transition-all duration-300'
+            >
+              <Heart className={`w-4 h-4 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
+            </button>
+          )}
 
-        {/* 现代徽章设计 */}
-        {config.showRating && rate && (
-          <div className='absolute top-3 right-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-large transition-all duration-300 ease-out group-hover:scale-110'>
-            {rate}
-          </div>
-        )}
+          {/* 已观看按钮 */}
+          {from === 'playrecord' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeletePlayRecord();
+              }}
+              disabled={isLoading}
+              className='bg-white/20 backdrop-blur-sm border border-white/30 text-white p-2 rounded-full shadow-large hover:scale-110 transition-all duration-300'
+            >
+              <CheckCircle className='w-4 h-4' />
+            </button>
+          )}
 
-        {actualEpisodes && actualEpisodes > 1 && (
-          <div className='absolute top-3 right-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-large transition-all duration-300 ease-out group-hover:scale-110'>
-            {currentEpisode
-              ? `${currentEpisode}/${actualEpisodes}`
-              : actualEpisodes}
-          </div>
-        )}
+          {/* 豆瓣链接按钮 */}
+          {from === 'douban' && douban_id && (
+            <a
+              href={`https://movie.douban.com/subject/${douban_id}/`}
+              target='_blank'
+              rel='noopener noreferrer'
+              onClick={(e) => e.stopPropagation()}
+              className='bg-accent-500 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-large transition-all duration-300 ease-out group-hover:scale-110'
+            >
+              <Link className='w-3 h-3' />
+            </a>
+          )}
 
-        {/* 豆瓣链接 */}
-        {config.showDoubanLink && actualDoubanId && (
-          <a
-            href={`https://movie.douban.com/subject/${actualDoubanId}`}
-            target='_blank'
-            rel='noopener noreferrer'
-            onClick={(e) => e.stopPropagation()}
-            className='absolute top-3 left-3 opacity-0 -translate-x-4 transition-all duration-500 ease-out delay-150 group-hover:opacity-100 group-hover:translate-x-0'
-          >
-            <div className='bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-large hover:shadow-glow hover:scale-110 transition-all duration-300 ease-out'>
-              <Link size={16} />
+          {/* 评分徽章 */}
+          {rate && (
+            <div className='bg-brand-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-large transition-all duration-300 ease-out group-hover:scale-110'>
+              {rate}
             </div>
-          </a>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* 进度条 */}
-      {config.showProgress && progress !== undefined && (
-        <div className='px-3 py-2'>
-          <div className='h-1.5 w-full bg-gray-200/50 rounded-full overflow-hidden'>
+        {/* 集数徽章 */}
+        {episodes && episodes > 1 && (
+          <div className='absolute top-3 left-3 bg-brand-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-large'>
+            {episodes}集
+          </div>
+        )}
+
+        {/* 年份徽章 */}
+        {year && (
+          <div className='absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full'>
+            {year}
+          </div>
+        )}
+
+        {/* 进度条 */}
+        {progress > 0 && (
+          <div className='absolute bottom-0 left-0 right-0 h-1 bg-black/30'>
             <div
-              className='h-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-500 ease-out rounded-full'
+              className='h-full bg-brand-500 transition-all duration-500 ease-out rounded-full'
               style={{ width: `${progress}%` }}
             />
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* 标题与来源 */}
-      <div className='p-3'>
-        <div className='relative'>
-          <span className='block text-sm font-semibold truncate text-gray-900 dark:text-gray-100 transition-colors duration-300 ease-in-out group-hover:text-brand-600 dark:group-hover:text-brand-400 peer'>
-            {actualTitle}
-          </span>
-          {/* 现代 tooltip */}
-          <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 bg-gray-900/90 backdrop-blur-sm text-white text-xs rounded-xl shadow-large opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-300 ease-out delay-200 whitespace-nowrap pointer-events-none border border-white/20'>
-            {actualTitle}
-            <div className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/90'></div>
-          </div>
-        </div>
-        {config.showSourceName && source_name && (
-          <span className='block text-xs text-gray-600 dark:text-gray-400 mt-2'>
-            <span className='inline-block bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-3 py-1 text-gray-700 dark:text-gray-300 transition-all duration-300 ease-in-out group-hover:bg-brand-500/20 group-hover:border-brand-500/30 group-hover:text-brand-700 dark:group-hover:text-brand-300'>
-              {source_name}
-            </span>
-          </span>
+      {/* 内容信息 */}
+      <div className='p-4'>
+        {/* 标题 */}
+        <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-300'>
+          {actualTitle}
+        </h3>
+
+        {/* 来源信息 */}
+        {source_name && (
+          <p className='text-xs text-gray-500 dark:text-gray-400 truncate'>
+            {source_name}
+          </p>
+        )}
+
+        {/* 当前集数信息 */}
+        {currentEpisode && episodes && currentEpisode > 0 && (
+          <p className='text-xs text-brand-500 dark:text-brand-400 mt-1'>
+            看到第 {currentEpisode} 集
+          </p>
         )}
       </div>
     </div>
