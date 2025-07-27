@@ -132,7 +132,9 @@ export default function VideoCard({
   }, [storageKey]);
 
   // 处理收藏/取消收藏
-  const handleFavoriteToggle = useCallback(async () => {
+  const handleFavoriteToggle = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!storageKey || isLoading) return;
     setIsLoading(true);
     try {
@@ -158,7 +160,9 @@ export default function VideoCard({
   }, [storageKey, favorited, isLoading, actualTitle, actualPoster, episodes, source_name, query]);
 
   // 处理播放记录删除
-  const handleDeletePlayRecord = useCallback(async () => {
+  const handleDeletePlayRecord = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!storageKey || isLoading) return;
     setIsLoading(true);
     try {
@@ -172,7 +176,8 @@ export default function VideoCard({
   }, [storageKey, isLoading, onDelete]);
 
   // 处理点击事件
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     if (from === 'douban' && douban_id) {
       router.push(`/search?q=${encodeURIComponent(actualTitle)}&douban_id=${douban_id}`);
     } else if (from === 'search' && isAggregate && items) {
@@ -183,9 +188,16 @@ export default function VideoCard({
   }, [from, douban_id, actualTitle, isAggregate, items, query, source, id, router]);
 
   return (
-    <div className='group relative rounded-2xl glass-card dark:glass-card-dark shadow-soft video-card-hover overflow-hidden'>
+    <div 
+      className='group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:z-10'
+      onClick={handleClick}
+      style={{ 
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent'
+      }}
+    >
       {/* 海报容器 */}
-      <div className='relative aspect-[2/3] w-full overflow-hidden rounded-t-2xl'>
+      <div className='relative aspect-[2/3] w-full overflow-hidden'>
         {/* 海报图片 */}
         <Image
           src={processImageUrl(actualPoster)}
@@ -193,32 +205,31 @@ export default function VideoCard({
           fill
           className='object-cover transition-transform duration-500 group-hover:scale-110'
           sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
+          priority={false}
         />
         
         {/* 占位符 */}
         <ImagePlaceholder />
 
-        {/* 悬停遮罩 */}
-        <div className='absolute inset-0 bg-black/80 opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100' />
+        {/* 悬停遮罩 - Netflix style */}
+        <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100' />
 
-        {/* 播放按钮 */}
-        <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-          <div className='bg-white/20 backdrop-blur-sm border border-white/30 rounded-full p-4 shadow-large'>
-            <PlayCircleIcon className='w-8 h-8 text-white' />
+        {/* 播放按钮 - Netflix style */}
+        <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out'>
+          <div className='bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300'>
+            <PlayCircleIcon className='w-6 h-6 text-black' />
           </div>
         </div>
 
-        {/* 操作按钮 */}
-        <div className='absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+        {/* 操作按钮 - Netflix style */}
+        <div className='absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out'>
           {/* 收藏按钮 */}
           {from !== 'favorite' && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFavoriteToggle();
-              }}
+              onClick={handleFavoriteToggle}
               disabled={isLoading}
-              className='bg-white/20 backdrop-blur-sm border border-white/30 text-white p-2 rounded-full shadow-large hover:scale-110 transition-all duration-300'
+              className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
+              style={{ touchAction: 'manipulation' }}
             >
               <Heart className={`w-4 h-4 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
             </button>
@@ -227,12 +238,10 @@ export default function VideoCard({
           {/* 已观看按钮 */}
           {from === 'playrecord' && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeletePlayRecord();
-              }}
+              onClick={handleDeletePlayRecord}
               disabled={isLoading}
-              className='bg-white/20 backdrop-blur-sm border border-white/30 text-white p-2 rounded-full shadow-large hover:scale-110 transition-all duration-300'
+              className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
+              style={{ touchAction: 'manipulation' }}
             >
               <CheckCircle className='w-4 h-4' />
             </button>
@@ -245,7 +254,8 @@ export default function VideoCard({
               target='_blank'
               rel='noopener noreferrer'
               onClick={(e) => e.stopPropagation()}
-              className='bg-accent-500 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-large transition-all duration-300 ease-out group-hover:scale-110'
+              className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
+              style={{ touchAction: 'manipulation' }}
             >
               <Link className='w-3 h-3' />
             </a>
@@ -253,7 +263,7 @@ export default function VideoCard({
 
           {/* 评分徽章 */}
           {rate && (
-            <div className='bg-brand-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-large transition-all duration-300 ease-out group-hover:scale-110'>
+            <div className='bg-black/70 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded shadow-lg'>
               {rate}
             </div>
           )}
@@ -261,33 +271,33 @@ export default function VideoCard({
 
         {/* 集数徽章 */}
         {episodes && episodes > 1 && (
-          <div className='absolute top-3 left-3 bg-brand-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-large'>
+          <div className='absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded shadow-lg'>
             {episodes}集
           </div>
         )}
 
         {/* 年份徽章 */}
         {year && (
-          <div className='absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full'>
+          <div className='absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded shadow-lg'>
             {year}
           </div>
         )}
 
-        {/* 进度条 */}
+        {/* 进度条 - Netflix style */}
         {progress > 0 && (
           <div className='absolute bottom-0 left-0 right-0 h-1 bg-black/30'>
             <div
-              className='h-full bg-brand-500 transition-all duration-500 ease-out rounded-full'
+              className='h-full bg-brand-500 transition-all duration-500 ease-out'
               style={{ width: `${progress}%` }}
             />
           </div>
         )}
       </div>
 
-      {/* 内容信息 */}
-      <div className='p-4'>
+      {/* 内容信息 - Netflix style */}
+      <div className='p-2'>
         {/* 标题 */}
-        <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-2 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-300'>
+        <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-1 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-300'>
           {actualTitle}
         </h3>
 

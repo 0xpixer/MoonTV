@@ -64,7 +64,7 @@ function HomeClient() {
       try {
         setLoading(true);
 
-        // 并行获取热门电影、热门剧集和热门综艺
+        // 并行获取热门电影、热门剧集和热门综艺，限制为12个
         const [moviesData, tvShowsData, varietyShowsData] = await Promise.all([
           getDoubanCategories({
             kind: 'movie',
@@ -76,15 +76,15 @@ function HomeClient() {
         ]);
 
         if (moviesData.code === 200) {
-          setHotMovies(moviesData.list);
+          setHotMovies(moviesData.list.slice(0, 12));
         }
 
         if (tvShowsData.code === 200) {
-          setHotTvShows(tvShowsData.list);
+          setHotTvShows(tvShowsData.list.slice(0, 12));
         }
 
         if (varietyShowsData.code === 200) {
-          setHotVarietyShows(varietyShowsData.list);
+          setHotVarietyShows(varietyShowsData.list.slice(0, 12));
         }
       } catch (error) {
         console.error('获取豆瓣数据失败:', error);
@@ -156,9 +156,9 @@ function HomeClient() {
 
   return (
     <PageLayout>
-      <div className='px-4 sm:px-12 py-6 sm:py-12 overflow-visible'>
+      <div className='px-4 sm:px-8 py-4 sm:py-8 overflow-visible'>
         {/* 顶部 Tab 切换 */}
-        <div className='mb-12 flex justify-center'>
+        <div className='mb-8 flex justify-center'>
           <CapsuleSwitch
             options={[
               { label: '首页', value: 'home' },
@@ -169,12 +169,12 @@ function HomeClient() {
           />
         </div>
 
-        <div className='max-w-[95%] mx-auto'>
+        <div className='max-w-full mx-auto'>
           {activeTab === 'favorites' ? (
             // 收藏夹视图
-            <section className='mb-12'>
-              <div className='mb-8 flex items-center justify-between'>
-                <h2 className='text-2xl font-bold gradient-text'>
+            <section className='mb-8'>
+              <div className='mb-6 flex items-center justify-between'>
+                <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100'>
                   我的收藏
                 </h2>
                 {favoriteItems.length > 0 && (
@@ -189,7 +189,7 @@ function HomeClient() {
                   </button>
                 )}
               </div>
-              <div className='justify-start grid grid-cols-3 gap-x-3 gap-y-16 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(12rem,_1fr))] sm:gap-x-8'>
+              <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4'>
                 {favoriteItems.map((item) => (
                   <div key={item.id + item.source} className='w-full'>
                     <VideoCard
@@ -216,9 +216,9 @@ function HomeClient() {
               <ContinueWatching />
 
               {/* 热门电影 */}
-              <section className='mb-12'>
-                <div className='mb-8 flex items-center justify-between'>
-                  <h2 className='text-2xl font-bold gradient-text'>
+              <section className='mb-8'>
+                <div className='mb-4 flex items-center justify-between'>
+                  <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100'>
                     热门电影
                   </h2>
                   <Link
@@ -232,22 +232,22 @@ function HomeClient() {
                 <ScrollableRow>
                   {loading
                     ? // 加载状态显示现代骨架屏
-                      Array.from({ length: 8 }).map((_, index) => (
+                      Array.from({ length: 12 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='min-w-[120px] w-30 sm:min-w-[160px] sm:w-40 flex-shrink-0'
                         >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-soft animate-pulse'>
+                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse'>
                             <div className='absolute inset-0 shimmer'></div>
                           </div>
-                          <div className='mt-3 h-4 bg-white/10 rounded-lg shimmer'></div>
+                          <div className='mt-2 h-3 bg-gray-200 dark:bg-gray-700 rounded shimmer'></div>
                         </div>
                       ))
                     : // 显示真实数据
                       hotMovies.map((movie, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='min-w-[120px] w-30 sm:min-w-[160px] sm:w-40 flex-shrink-0'
                         >
                           <VideoCard
                             from='douban'
@@ -264,9 +264,9 @@ function HomeClient() {
               </section>
 
               {/* 热门剧集 */}
-              <section className='mb-12'>
-                <div className='mb-8 flex items-center justify-between'>
-                  <h2 className='text-2xl font-bold gradient-text'>
+              <section className='mb-8'>
+                <div className='mb-4 flex items-center justify-between'>
+                  <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100'>
                     热门剧集
                   </h2>
                   <Link
@@ -280,22 +280,22 @@ function HomeClient() {
                 <ScrollableRow>
                   {loading
                     ? // 加载状态显示现代骨架屏
-                      Array.from({ length: 8 }).map((_, index) => (
+                      Array.from({ length: 12 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='min-w-[120px] w-30 sm:min-w-[160px] sm:w-40 flex-shrink-0'
                         >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-soft animate-pulse'>
+                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse'>
                             <div className='absolute inset-0 shimmer'></div>
                           </div>
-                          <div className='mt-3 h-4 bg-white/10 rounded-lg shimmer'></div>
+                          <div className='mt-2 h-3 bg-gray-200 dark:bg-gray-700 rounded shimmer'></div>
                         </div>
                       ))
                     : // 显示真实数据
                       hotTvShows.map((show, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='min-w-[120px] w-30 sm:min-w-[160px] sm:w-40 flex-shrink-0'
                         >
                           <VideoCard
                             from='douban'
@@ -311,9 +311,9 @@ function HomeClient() {
               </section>
 
               {/* 热门综艺 */}
-              <section className='mb-12'>
-                <div className='mb-8 flex items-center justify-between'>
-                  <h2 className='text-2xl font-bold gradient-text'>
+              <section className='mb-8'>
+                <div className='mb-4 flex items-center justify-between'>
+                  <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100'>
                     热门综艺
                   </h2>
                   <Link
@@ -327,22 +327,22 @@ function HomeClient() {
                 <ScrollableRow>
                   {loading
                     ? // 加载状态显示现代骨架屏
-                      Array.from({ length: 8 }).map((_, index) => (
+                      Array.from({ length: 12 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='min-w-[120px] w-30 sm:min-w-[160px] sm:w-40 flex-shrink-0'
                         >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-soft animate-pulse'>
+                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse'>
                             <div className='absolute inset-0 shimmer'></div>
                           </div>
-                          <div className='mt-3 h-4 bg-white/10 rounded-lg shimmer'></div>
+                          <div className='mt-2 h-3 bg-gray-200 dark:bg-gray-700 rounded shimmer'></div>
                         </div>
                       ))
                     : // 显示真实数据
                       hotVarietyShows.map((show, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='min-w-[120px] w-30 sm:min-w-[160px] sm:w-40 flex-shrink-0'
                         >
                           <VideoCard
                             from='douban'
@@ -368,7 +368,7 @@ function HomeClient() {
         >
           <div className='w-full max-w-md rounded-2xl glass-card dark:glass-card-dark p-8 shadow-large transform transition-all duration-300 hover:shadow-glow-lg'>
             <div className='flex justify-between items-start mb-6'>
-              <h3 className='text-2xl font-bold tracking-tight gradient-text'>
+              <h3 className='text-2xl font-bold tracking-tight text-brand-500 dark:text-brand-400'>
                 提示
               </h3>
               <button
@@ -378,8 +378,8 @@ function HomeClient() {
               ></button>
             </div>
             <div className='mb-8'>
-              <div className='relative overflow-hidden rounded-xl mb-6 bg-gradient-to-r from-brand-50 to-accent-50 dark:from-brand-900/20 dark:to-accent-900/20 p-4 border border-brand-200/50 dark:border-brand-700/30'>
-                <div className='absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-brand-500 to-accent-500'></div>
+              <div className='relative overflow-hidden rounded-xl mb-6 bg-brand-50 dark:bg-brand-900/20 p-4 border border-brand-200/50 dark:border-brand-700/30'>
+                <div className='absolute inset-y-0 left-0 w-1 bg-brand-500'></div>
                 <p className='ml-4 text-gray-600 dark:text-gray-300 leading-relaxed'>
                   {announcement}
                 </p>

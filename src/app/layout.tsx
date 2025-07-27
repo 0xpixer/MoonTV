@@ -30,11 +30,37 @@ export async function generateMetadata(): Promise<Metadata> {
     title: siteName,
     description: 'Modern streaming platform for movies and TV shows',
     manifest: '/manifest.json',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'black-translucent',
+      title: siteName,
+    },
+    formatDetection: {
+      telephone: false,
+    },
+    openGraph: {
+      type: 'website',
+      locale: 'zh_CN',
+      url: 'https://moontv.app',
+      title: siteName,
+      description: 'Modern streaming platform for movies and TV shows',
+      siteName: siteName,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: siteName,
+      description: 'Modern streaming platform for movies and TV shows',
+    },
   };
 }
 
 export const viewport: Viewport = {
   themeColor: '#22c55e',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({
@@ -72,6 +98,31 @@ export default async function RootLayout({
   return (
     <html lang='zh-CN' suppressHydrationWarning className={inter.variable}>
       <head>
+        {/* PWA Meta Tags */}
+        <meta name="application-name" content={siteName} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content={siteName} />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        <meta name="msapplication-TileColor" content="#22c55e" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        
+        {/* iOS Specific */}
+        <meta name="apple-touch-fullscreen" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        
+        {/* Lock Screen Cover Support */}
+        <meta name="apple-mobile-web-app-title" content={siteName} />
+        <meta name="apple-touch-icon" content="/icons/icon-192x192.png" />
+        <meta name="apple-touch-icon-precomposed" content="/icons/icon-192x192.png" />
+        
+        {/* Android Specific */}
+        <meta name="theme-color" content="#22c55e" />
+        <meta name="msapplication-TileColor" content="#22c55e" />
+        
         {/* 将配置序列化后直接写入脚本，浏览器端可通过 window.RUNTIME_CONFIG 获取 */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
@@ -79,9 +130,35 @@ export default async function RootLayout({
             __html: `window.RUNTIME_CONFIG = ${JSON.stringify(runtimeConfig)};`,
           }}
         />
+        
+        {/* PWA Registration Script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('SW registered: ', registration);
+                    })
+                    .catch(function(registrationError) {
+                      console.log('SW registration failed: ', registrationError);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body
         className={`${inter.className} min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased`}
+        style={{ 
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none'
+        }}
       >
         <ThemeProvider
           attribute='class'
