@@ -98,10 +98,10 @@ export default async function RootLayout({
   return (
     <html lang='zh-CN' suppressHydrationWarning className={inter.variable}>
       <head>
-        {/* Favicon */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        {/* Favicon - using high resolution icon */}
+        <link rel="icon" href="/icons/icon-192x192.png" sizes="192x192" type="image/png" />
+        <link rel="icon" href="/icons/icon-512x512.png" sizes="512x512" type="image/png" />
+        <link rel="shortcut icon" href="/icons/icon-192x192.png" />
         
         {/* PWA Meta Tags */}
         <meta name="application-name" content={siteName} />
@@ -122,9 +122,9 @@ export default async function RootLayout({
         {/* Lock Screen Cover Support */}
         <meta name="apple-mobile-web-app-title" content={siteName} />
         
-        {/* High resolution iOS icons - using the largest available */}
-        <link rel="apple-touch-icon" href="/icons/icon-512x512.png" />
-        <link rel="apple-touch-icon-precomposed" href="/icons/icon-512x512.png" />
+        {/* High resolution iOS icons - using standard iOS icon files */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
         <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
@@ -149,16 +149,27 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              console.log('PWA: Starting initialization...');
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
+                  console.log('PWA: Page loaded, registering service worker...');
                   navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
-                      console.log('SW registered: ', registration);
+                      console.log('PWA: Service worker registered successfully:', registration);
                     })
                     .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
+                      console.error('PWA: Service worker registration failed:', registrationError);
                     });
                 });
+              } else {
+                console.log('PWA: Service worker not supported');
+              }
+              
+              // Debug PWA mode
+              if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('PWA: Running in standalone mode');
+              } else {
+                console.log('PWA: Running in browser mode');
               }
             `,
           }}

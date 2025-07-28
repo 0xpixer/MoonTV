@@ -4,6 +4,7 @@
 
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import React from 'react';
 import { Suspense, useEffect, useState } from 'react';
 
 // 客户端收藏 API
@@ -23,6 +24,56 @@ import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
 
+// Error boundary component
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('PWA Error Boundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              应用加载出错
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              请刷新页面重试
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-brand-500 text-white px-4 py-2 rounded-lg hover:bg-brand-600 transition-colors"
+            >
+              刷新页面
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function HomeClient() {
   const [activeTab, setActiveTab] = useState<'home' | 'favorites'>('home');
   const [hotMovies, setHotMovies] = useState<DoubanItem[]>([]);
@@ -32,6 +83,25 @@ function HomeClient() {
   const { announcement } = useSite();
 
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+
+  // Add debugging for PWA
+  useEffect(() => {
+    console.log('HomeClient: Component mounted');
+    console.log('PWA Mode:', window.matchMedia('(display-mode: standalone)').matches);
+    console.log('User Agent:', navigator.userAgent);
+    
+    // Check if running in PWA mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('PWA: Running in standalone mode');
+    }
+    
+    // Ensure proper initialization for PWA
+    const timer = setTimeout(() => {
+      console.log('PWA: Initialization complete');
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // 检查公告弹窗状态
   useEffect(() => {
@@ -401,7 +471,9 @@ function HomeClient() {
 export default function Home() {
   return (
     <Suspense>
-      <HomeClient />
+      <ErrorBoundary>
+        <HomeClient />
+      </ErrorBoundary>
     </Suspense>
   );
 }
