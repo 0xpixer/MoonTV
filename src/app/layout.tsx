@@ -98,6 +98,11 @@ export default async function RootLayout({
   return (
     <html lang='zh-CN' suppressHydrationWarning className={inter.variable}>
       <head>
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        
         {/* PWA Meta Tags */}
         <meta name="application-name" content={siteName} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -116,8 +121,10 @@ export default async function RootLayout({
         
         {/* Lock Screen Cover Support */}
         <meta name="apple-mobile-web-app-title" content={siteName} />
-        <meta name="apple-touch-icon" content="/icons/icon-192x192.png" />
-        <meta name="apple-touch-icon-precomposed" content="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon-precomposed" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
         
         {/* Android Specific */}
         <meta name="theme-color" content="#22c55e" />
