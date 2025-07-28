@@ -56,6 +56,8 @@ export default function VideoCard({
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const isAggregate = from === 'search' && !!items?.length;
 
@@ -96,6 +98,20 @@ export default function VideoCard({
 
   const actualTitle = aggregateData?.first.title ?? title;
   const actualPoster = aggregateData?.first.poster ?? poster;
+
+  // 重试加载图片
+  const handleImageRetry = () => {
+    if (retryCount < 2) {
+      setRetryCount(prev => prev + 1);
+      setImageError(false);
+    }
+  };
+
+  // 当海报URL改变时重置错误状态
+  useEffect(() => {
+    setImageError(false);
+    setRetryCount(0);
+  }, [actualPoster]);
 
   // 生成存储键
   const storageKey = useMemo(() => {
@@ -207,13 +223,39 @@ export default function VideoCard({
       <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg'>
         {/* 海报图片 */}
         <Image
+          key={`${actualPoster}-${retryCount}`}
           src={processImageUrl(actualPoster)}
           alt={actualTitle}
           fill
           className='object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
           sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
           priority={false}
+          onError={() => setImageError(true)}
+          onLoad={() => setImageError(false)}
         />
+        
+        {/* 图片加载失败时的占位符 */}
+        {imageError && (
+          <div className='absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center'>
+            <div className='text-center'>
+              <div className='text-4xl mb-2'>🎬</div>
+              <div className='text-xs text-gray-500 dark:text-gray-400 px-2 mb-2'>
+                {actualTitle}
+              </div>
+              {retryCount < 2 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleImageRetry();
+                  }}
+                  className='text-xs bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors'
+                >
+                  重试
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         
 
 
