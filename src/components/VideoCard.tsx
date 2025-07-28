@@ -13,7 +13,7 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
-import { processImageUrl } from '@/lib/utils';
+import { processImageUrlWithCache } from '@/lib/utils';
 
 
 interface VideoCardProps {
@@ -221,19 +221,15 @@ export default function VideoCard({
     >
       {/* 海报容器 */}
       <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg'>
-        {/* 海报图片 */}
+        {/* 海报图片 - 使用新的图片缓存系统 */}
         <Image
           key={`${actualPoster}-${retryCount}`}
-          src={processImageUrl(actualPoster)}
+          src={processImageUrlWithCache(actualPoster, douban_id)}
           alt={actualTitle}
           fill
           className='object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
           sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
           priority={false}
-          style={{
-            opacity: imageError ? 0 : 1,
-            zIndex: imageError ? -1 : 0
-          }}
           onError={(e) => {
             console.log('Image error:', actualPoster, e);
             setImageError(true);
@@ -241,50 +237,6 @@ export default function VideoCard({
           onLoad={() => {
             console.log('Image loaded successfully:', actualPoster);
             setImageError(false);
-          }}
-        />
-        
-        {/* 备用图片标签 - 如果Next.js Image组件有问题 */}
-        <img
-          src={processImageUrl(actualPoster)}
-          alt={actualTitle}
-          className='absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
-          style={{ 
-            zIndex: imageError ? 1 : -1,
-            opacity: imageError ? 1 : 0
-          }}
-          onError={(e) => {
-            console.log('Fallback img error:', actualPoster, e);
-          }}
-          onLoad={(e) => {
-            console.log('Fallback img loaded:', actualPoster);
-            if (imageError) {
-              // 如果主图片失败且备用图片加载成功，显示它
-              (e.target as HTMLImageElement).style.opacity = '1';
-              (e.target as HTMLImageElement).style.zIndex = '1';
-            }
-          }}
-        />
-        
-        {/* 直接使用原始URL的备用图片 - 绕过代理 */}
-        <img
-          src={actualPoster}
-          alt={actualTitle}
-          className='absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
-          style={{ 
-            zIndex: imageError ? 2 : -2,
-            opacity: imageError ? 1 : 0
-          }}
-          onError={(e) => {
-            console.log('Direct URL img error:', actualPoster, e);
-          }}
-          onLoad={(e) => {
-            console.log('Direct URL img loaded:', actualPoster);
-            if (imageError) {
-              // 如果主图片失败且直接URL加载成功，显示它
-              (e.target as HTMLImageElement).style.opacity = '1';
-              (e.target as HTMLImageElement).style.zIndex = '2';
-            }
           }}
         />
         
@@ -310,112 +262,105 @@ export default function VideoCard({
             </div>
           </div>
         )}
-        
-
 
         {/* 悬停遮罩 - Netflix style */}
         <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100' />
-
-        {/* 播放按钮 - Netflix style */}
+        
+        {/* 播放按钮 */}
         <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out'>
           <div className='bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300'>
-            <PlayCircleIcon className='w-6 h-6 text-black' />
+            <PlayCircleIcon className='w-8 h-8 text-gray-800' />
           </div>
         </div>
 
-        {/* 操作按钮 - Netflix style */}
+        {/* 操作按钮 */}
         <div className='absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out'>
           {/* 收藏按钮 */}
-          {from !== 'favorite' && (
-            <button
-              onClick={handleFavoriteToggle}
-              disabled={isLoading}
-              className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
-              style={{ touchAction: 'manipulation' }}
-            >
-              <Heart className={`w-4 h-4 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
-            </button>
-          )}
+          <button
+            onClick={handleFavoriteToggle}
+            disabled={isLoading}
+            className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
+          >
+            {isLoading ? (
+              <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+            ) : favorited ? (
+              <Heart className='w-4 h-4 fill-red-500 text-red-500' />
+            ) : (
+              <Heart className='w-4 h-4' />
+            )}
+          </button>
 
-          {/* 已观看按钮 */}
+          {/* 删除播放记录按钮 */}
           {from === 'playrecord' && (
             <button
               onClick={handleDeletePlayRecord}
               disabled={isLoading}
               className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
-              style={{ touchAction: 'manipulation' }}
             >
-              <CheckCircle className='w-4 h-4' />
+              {isLoading ? (
+                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+              ) : (
+                <Link className='w-4 h-4' />
+              )}
             </button>
           )}
 
-          {/* 豆瓣链接按钮 */}
-          {from === 'douban' && douban_id && (
-            <a
-              href={`https://movie.douban.com/subject/${douban_id}/`}
-              target='_blank'
-              rel='noopener noreferrer'
-              onClick={(e) => e.stopPropagation()}
+          {/* 删除收藏按钮 */}
+          {from === 'favorite' && (
+            <button
+              onClick={handleFavoriteToggle}
+              disabled={isLoading}
               className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
-              style={{ touchAction: 'manipulation' }}
             >
-              <Link className='w-3 h-3' />
-            </a>
+              {isLoading ? (
+                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+              ) : (
+                <CheckCircle className='w-4 h-4' />
+              )}
+            </button>
           )}
+        </div>
 
-          {/* 评分徽章 */}
+        {/* 评分/集数/年份徽章 */}
+        <div className='absolute bottom-2 left-2 flex flex-col gap-1'>
+          {/* 评分 */}
           {rate && (
-            <div className='bg-black/70 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded shadow-lg'>
-              {rate}
+            <div className='bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
+              ⭐ {rate}
+            </div>
+          )}
+          
+          {/* 集数 */}
+          {episodes && episodes > 1 && (
+            <div className='bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
+              📺 {episodes}集
+            </div>
+          )}
+          
+          {/* 年份 */}
+          {year && (
+            <div className='bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
+              📅 {year}
             </div>
           )}
         </div>
 
-        {/* 集数徽章 */}
-        {episodes && episodes > 1 && (
-          <div className='absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded shadow-lg'>
-            {episodes}集
-          </div>
-        )}
-
-        {/* 年份徽章 */}
-        {year && (
-          <div className='absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded shadow-lg'>
-            {year}
-          </div>
-        )}
-
-        {/* 进度条 - Netflix style */}
+        {/* 播放进度条 */}
         {progress > 0 && (
           <div className='absolute bottom-0 left-0 right-0 h-1 bg-black/30'>
-            <div
+            <div 
               className='h-full bg-brand-500 transition-all duration-500 ease-out'
-              style={{ width: `${progress}%` }}
+              style={{ width: `${(progress / 100) * 100}%` }}
             />
           </div>
         )}
       </div>
 
-      {/* 内容信息 - Netflix style */}
-      <div className='p-2'>
-        {/* 标题 */}
-        <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-1 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-300'>
+      {/* 标题 */}
+      <div className='mt-2 px-1'>
+        <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-300'>
           {actualTitle}
         </h3>
-
-        {/* 来源信息 */}
-        {source_name && (
-          <p className='text-xs text-gray-500 dark:text-gray-400 truncate'>
-            {source_name}
-          </p>
-        )}
-
-        {/* 当前集数信息 */}
-        {currentEpisode && episodes && currentEpisode > 0 && (
-          <p className='text-xs text-brand-500 dark:text-brand-400 mt-1'>
-            看到第 {currentEpisode} 集
-          </p>
-        )}
       </div>
     </div>
   );
