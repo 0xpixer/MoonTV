@@ -212,7 +212,7 @@ export default function VideoCard({
 
   return (
     <div 
-      className='group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:z-10'
+      className='group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:z-10 w-full max-w-full min-w-0'
       onClick={handleClick}
       style={{ 
         touchAction: 'manipulation',
@@ -220,7 +220,7 @@ export default function VideoCard({
       }}
     >
       {/* 海报容器 */}
-      <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg'>
+      <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg flex-shrink-0'>
         {/* 海报图片 - 使用新的图片缓存系统 */}
         <Image
           key={`${actualPoster}-${retryCount}`}
@@ -268,7 +268,7 @@ export default function VideoCard({
         
         {/* 播放按钮 - 移动端始终显示，桌面端悬停显示 */}
         <div className='absolute inset-0 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-out'>
-          <div className='bg-white/90 backdrop-blur-sm rounded-full p-4 md:p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300'>
+          <div className='bg-white/50 md:bg-white/90 backdrop-blur-sm rounded-full p-4 md:p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300'>
             <PlayCircleIcon className='w-12 h-12 md:w-8 md:h-8 text-gray-800' />
           </div>
         </div>
