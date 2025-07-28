@@ -121,10 +121,17 @@ export default async function RootLayout({
         
         {/* Lock Screen Cover Support */}
         <meta name="apple-mobile-web-app-title" content={siteName} />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon-precomposed" href="/icons/icon-192x192.png" />
+        
+        {/* High resolution iOS icons - using the largest available */}
+        <link rel="apple-touch-icon" href="/icons/icon-512x512.png" />
+        <link rel="apple-touch-icon-precomposed" href="/icons/icon-512x512.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="256x256" href="/icons/icon-256x256.png" />
+        <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
         
         {/* Android Specific */}
         <meta name="theme-color" content="#22c55e" />

@@ -1063,14 +1063,19 @@ function PlayPageClient() {
       Artplayer.PLAYBACK_RATE = [0.5, 0.75, 1, 1.25, 1.5, 2, 3];
       Artplayer.USE_RAF = true;
 
+      // iOS PWA specific optimizations
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                   (window.navigator as any).standalone === true;
+
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
         url: videoUrl,
         poster: videoCover,
         volume: 0.7,
         isLive: false,
-        muted: false,
-        autoplay: true,
+        muted: isIOS && isPWA, // iOS PWA requires muted for autoplay
+        autoplay: !(isIOS && isPWA), // Disable autoplay for iOS PWA initially
         pip: true,
         autoSize: false,
         autoMini: false,
@@ -1085,7 +1090,7 @@ function PlayPageClient() {
         subtitleOffset: false,
         miniProgressBar: false,
         mutex: true,
-        playsInline: true,
+        playsInline: true, // Critical for iOS
         autoPlayback: false,
         airplay: true,
         theme: '#22c55e',
@@ -1096,6 +1101,7 @@ function PlayPageClient() {
         lock: true,
         moreVideoAttr: {
           crossOrigin: 'anonymous',
+          playsInline: true, // Critical for iOS
         },
         // HLS 支持配置
         customType: {
@@ -1200,6 +1206,35 @@ function PlayPageClient() {
       // 监听播放器事件
       artPlayerRef.current.on('ready', () => {
         setError(null);
+        
+        // iOS PWA specific video setup
+        if (isIOS && isPWA && artPlayerRef.current?.video) {
+          const video = artPlayerRef.current.video as HTMLVideoElement;
+          video.setAttribute('playsinline', 'true');
+          video.setAttribute('webkit-playsinline', 'true');
+          video.setAttribute('x-webkit-airplay', 'allow');
+          
+          // Enable autoplay after user interaction for iOS PWA
+          const enableAutoplay = () => {
+            if (video.muted) {
+              video.muted = false;
+              video.play().catch(() => {
+                // If unmuted autoplay fails, keep muted
+                video.muted = true;
+              });
+            }
+          };
+          
+          // Listen for user interaction to enable autoplay
+          const handleUserInteraction = () => {
+            enableAutoplay();
+            document.removeEventListener('touchstart', handleUserInteraction);
+            document.removeEventListener('click', handleUserInteraction);
+          };
+          
+          document.addEventListener('touchstart', handleUserInteraction);
+          document.addEventListener('click', handleUserInteraction);
+        }
       });
 
       artPlayerRef.current.on('video:volumechange', () => {
