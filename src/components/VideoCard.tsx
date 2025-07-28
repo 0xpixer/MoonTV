@@ -263,18 +263,18 @@ export default function VideoCard({
           </div>
         )}
 
-        {/* 悬停遮罩 - Netflix style */}
-        <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100' />
+        {/* 悬停遮罩 - Netflix style - 移动端不显示 */}
+        <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 hidden md:block' />
         
-        {/* 播放按钮 */}
-        <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out'>
-          <div className='bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300'>
-            <PlayCircleIcon className='w-8 h-8 text-gray-800' />
+        {/* 播放按钮 - 移动端始终显示，桌面端悬停显示 */}
+        <div className='absolute inset-0 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-out'>
+          <div className='bg-white/90 backdrop-blur-sm rounded-full p-4 md:p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300'>
+            <PlayCircleIcon className='w-12 h-12 md:w-8 md:h-8 text-gray-800' />
           </div>
         </div>
 
-        {/* 操作按钮 */}
-        <div className='absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out'>
+        {/* 操作按钮 - 桌面端显示，移动端隐藏 */}
+        <div className='absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out hidden md:flex'>
           {/* 收藏按钮 */}
           <button
             onClick={handleFavoriteToggle}
