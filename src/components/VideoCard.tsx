@@ -205,19 +205,21 @@ export default function VideoCard({
       }}
     >
       {/* 海报容器 */}
-      <div className='relative aspect-[2/3] w-full overflow-hidden'>
+      <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg'>
         {/* 海报图片 */}
         <Image
           src={processImageUrl(actualPoster)}
           alt={actualTitle}
           fill
-          className='object-cover transition-transform duration-500 group-hover:scale-110'
+          className='object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
           sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
           priority={false}
         />
         
-        {/* 占位符 */}
-        <ImagePlaceholder aspectRatio="aspect-[2/3]" />
+        {/* 占位符 - 只在图片加载时显示 */}
+        <div className="absolute inset-0">
+          <ImagePlaceholder aspectRatio="aspect-[2/3]" />
+        </div>
 
         {/* 悬停遮罩 - Netflix style */}
         <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100' />
