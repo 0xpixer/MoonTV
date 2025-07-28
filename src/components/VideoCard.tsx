@@ -32,7 +32,7 @@ interface VideoCardProps {
   onDelete?: () => void;
   rate?: string;
   items?: SearchResult[];
-  type?: string;
+
 }
 
 export default function VideoCard({
@@ -51,7 +51,7 @@ export default function VideoCard({
   onDelete,
   rate,
   items,
-  type = '',
+
 }: VideoCardProps) {
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
@@ -230,6 +230,10 @@ export default function VideoCard({
           className='object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
           sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
           priority={false}
+          style={{
+            opacity: imageError ? 0 : 1,
+            zIndex: imageError ? -1 : 0
+          }}
           onError={(e) => {
             console.log('Image error:', actualPoster, e);
             setImageError(true);
@@ -244,15 +248,21 @@ export default function VideoCard({
         <img
           src={processImageUrl(actualPoster)}
           alt={actualTitle}
-          className='absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg opacity-0'
-          style={{ zIndex: -1 }}
+          className='absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
+          style={{ 
+            zIndex: imageError ? 1 : -1,
+            opacity: imageError ? 1 : 0
+          }}
           onError={(e) => {
             console.log('Fallback img error:', actualPoster, e);
           }}
           onLoad={(e) => {
             console.log('Fallback img loaded:', actualPoster);
-            // 如果备用图片加载成功，显示它
-            (e.target as HTMLImageElement).style.opacity = '1';
+            if (imageError) {
+              // 如果主图片失败且备用图片加载成功，显示它
+              (e.target as HTMLImageElement).style.opacity = '1';
+              (e.target as HTMLImageElement).style.zIndex = '1';
+            }
           }}
         />
         
@@ -260,15 +270,21 @@ export default function VideoCard({
         <img
           src={actualPoster}
           alt={actualTitle}
-          className='absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg opacity-0'
-          style={{ zIndex: -2 }}
+          className='absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
+          style={{ 
+            zIndex: imageError ? 2 : -2,
+            opacity: imageError ? 1 : 0
+          }}
           onError={(e) => {
             console.log('Direct URL img error:', actualPoster, e);
           }}
           onLoad={(e) => {
             console.log('Direct URL img loaded:', actualPoster);
-            // 如果直接URL加载成功，显示它
-            (e.target as HTMLImageElement).style.opacity = '1';
+            if (imageError) {
+              // 如果主图片失败且直接URL加载成功，显示它
+              (e.target as HTMLImageElement).style.opacity = '1';
+              (e.target as HTMLImageElement).style.zIndex = '2';
+            }
           }}
         />
         
