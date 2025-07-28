@@ -15,7 +15,6 @@ import {
 import { SearchResult } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 
-import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 
 interface VideoCardProps {
   id?: string;
@@ -216,10 +215,7 @@ export default function VideoCard({
           priority={false}
         />
         
-        {/* 占位符 - 只在图片加载时显示 */}
-        <div className="absolute inset-0">
-          <ImagePlaceholder aspectRatio="aspect-[2/3]" />
-        </div>
+
 
         {/* 悬停遮罩 - Netflix style */}
         <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100' />
