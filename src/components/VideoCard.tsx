@@ -230,8 +230,46 @@ export default function VideoCard({
           className='object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
           sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
           priority={false}
-          onError={() => setImageError(true)}
-          onLoad={() => setImageError(false)}
+          onError={(e) => {
+            console.log('Image error:', actualPoster, e);
+            setImageError(true);
+          }}
+          onLoad={() => {
+            console.log('Image loaded successfully:', actualPoster);
+            setImageError(false);
+          }}
+        />
+        
+        {/* 备用图片标签 - 如果Next.js Image组件有问题 */}
+        <img
+          src={processImageUrl(actualPoster)}
+          alt={actualTitle}
+          className='absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg opacity-0'
+          style={{ zIndex: -1 }}
+          onError={(e) => {
+            console.log('Fallback img error:', actualPoster, e);
+          }}
+          onLoad={(e) => {
+            console.log('Fallback img loaded:', actualPoster);
+            // 如果备用图片加载成功，显示它
+            (e.target as HTMLImageElement).style.opacity = '1';
+          }}
+        />
+        
+        {/* 直接使用原始URL的备用图片 - 绕过代理 */}
+        <img
+          src={actualPoster}
+          alt={actualTitle}
+          className='absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg opacity-0'
+          style={{ zIndex: -2 }}
+          onError={(e) => {
+            console.log('Direct URL img error:', actualPoster, e);
+          }}
+          onLoad={(e) => {
+            console.log('Direct URL img loaded:', actualPoster);
+            // 如果直接URL加载成功，显示它
+            (e.target as HTMLImageElement).style.opacity = '1';
+          }}
         />
         
         {/* 图片加载失败时的占位符 */}
