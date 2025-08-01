@@ -150,27 +150,65 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               console.log('PWA: Starting initialization...');
+              
+              // Add error handling for unhandled errors
+              window.addEventListener('error', function(event) {
+                console.error('PWA: Unhandled error:', event.error);
+              });
+              
+              window.addEventListener('unhandledrejection', function(event) {
+                console.error('PWA: Unhandled promise rejection:', event.reason);
+              });
+              
+              // Check if running in PWA mode
+              if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('PWA: Running in standalone mode');
+              } else {
+                console.log('PWA: Running in browser mode');
+              }
+              
+              // Register service worker with better error handling
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   console.log('PWA: Page loaded, registering service worker...');
-                  navigator.serviceWorker.register('/sw.js')
+                  
+                  // Check if service worker file exists first
+                  fetch('/sw.js', { method: 'HEAD' })
+                    .then(function(response) {
+                      if (response.ok) {
+                        console.log('PWA: Service worker file found, registering...');
+                        return navigator.serviceWorker.register('/sw.js');
+                      } else {
+                        throw new Error('Service worker file not found');
+                      }
+                    })
                     .then(function(registration) {
                       console.log('PWA: Service worker registered successfully:', registration);
+                      
+                      // Check for updates
+                      registration.addEventListener('updatefound', function() {
+                        console.log('PWA: Service worker update found');
+                      });
                     })
                     .catch(function(registrationError) {
                       console.error('PWA: Service worker registration failed:', registrationError);
+                      
+                      // Continue without service worker
+                      console.log('PWA: Continuing without service worker');
                     });
                 });
               } else {
                 console.log('PWA: Service worker not supported');
               }
               
-              // Debug PWA mode
-              if (window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('PWA: Running in standalone mode');
-              } else {
-                console.log('PWA: Running in browser mode');
-              }
+              // Add network status monitoring
+              window.addEventListener('online', function() {
+                console.log('PWA: Network is online');
+              });
+              
+              window.addEventListener('offline', function() {
+                console.log('PWA: Network is offline');
+              });
             `,
           }}
         />

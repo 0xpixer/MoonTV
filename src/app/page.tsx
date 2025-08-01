@@ -95,13 +95,34 @@ function HomeClient() {
       console.log('PWA: Running in standalone mode');
     }
     
+    // Add error boundary for PWA issues
+    const handleError = (error: ErrorEvent) => {
+      console.error('HomeClient: Error caught:', error);
+    };
+    
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('HomeClient: Unhandled promise rejection:', event.reason);
+    };
+    
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
     // Ensure proper initialization for PWA
     const timer = setTimeout(() => {
       console.log('PWA: Initialization complete');
-    }, 500);
+      
+      // Check if content loaded properly
+      if (hotMovies.length === 0 && hotTvShows.length === 0 && !loading) {
+        console.warn('PWA: No content loaded, this might indicate an issue');
+      }
+    }, 3000);
     
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      clearTimeout(timer);
+    };
+  }, [hotMovies.length, hotTvShows.length, loading]);
 
   // 检查公告弹窗状态
   useEffect(() => {
