@@ -217,19 +217,21 @@ async function doBackgroundSync() {
 }
 
 // Lock screen cover update function
-async function updateLockScreenCover(imageUrl, title) {
+async function updateLockScreenCover(data) {
   try {
-    console.log('PWA: Updating lock screen cover:', title);
+    console.log('PWA: Updating lock screen cover:', data.title);
     
     // For iOS, we can't directly update the lock screen
     // But we can store the current playing info for potential use
     const currentPlaying = {
-      title,
-      imageUrl,
+      title: data.title,
+      poster: data.poster,
+      episode: data.episode,
+      progress: data.progress,
       timestamp: Date.now()
     };
     
-    // Store in IndexedDB or cache for potential use
+    // Store in cache for potential use
     const cache = await caches.open(DYNAMIC_CACHE);
     await cache.put('/current-playing', new Response(JSON.stringify(currentPlaying)));
     
@@ -243,12 +245,39 @@ async function updateLockScreenCover(imageUrl, title) {
 // Expose updateLockScreenCover function to clients
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'UPDATE_LOCK_SCREEN_COVER') {
-    event.waitUntil(
-      updateLockScreenCover(event.data.imageUrl, event.data.title)
-        .then((success) => {
-          event.ports[0].postMessage({ success });
-        })
-    );
+    // Check if message ports are available
+    if (event.ports && event.ports.length > 0) {
+      event.waitUntil(
+        updateLockScreenCover(event.data)
+          .then((success) => {
+            try {
+              event.ports[0].postMessage({ success });
+            } catch (error) {
+              console.error('PWA: Failed to send message response:', error);
+            }
+          })
+          .catch((error) => {
+            console.error('PWA: Lock screen cover update failed:', error);
+            try {
+              event.ports[0].postMessage({ success: false, error: error.message });
+            } catch (portError) {
+              console.error('PWA: Failed to send error response:', portError);
+            }
+          })
+      );
+    } else {
+      // Handle case where no message ports are available
+      console.log('PWA: No message ports available for lock screen cover update');
+      event.waitUntil(
+        updateLockScreenCover(event.data)
+          .then((success) => {
+            console.log('PWA: Lock screen cover updated successfully:', success);
+          })
+          .catch((error) => {
+            console.error('PWA: Lock screen cover update failed:', error);
+          })
+      );
+    }
   }
 });
 

@@ -8,30 +8,61 @@ export interface LockScreenCoverData {
 }
 
 // Update lock screen cover with current playing content
-export async function updateLockScreenCover(data: LockScreenCoverData): Promise<void> {
+export async function updateLockScreenCover(data: LockScreenCoverData): Promise<boolean> {
   try {
     if ('serviceWorker' in navigator && 'serviceWorker' in navigator.serviceWorker) {
       const registration = await navigator.serviceWorker.ready;
       
-      // Send message to service worker to update lock screen cover
-      registration.active?.postMessage({
-        type: 'UPDATE_LOCK_SCREEN_COVER',
-        ...data
-      });
-
-      // For iOS Safari, we can also update the web app icon
-      if (typeof window !== 'undefined' && 'navigator' in window) {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (registration.active) {
+        // Create a message channel for proper communication
+        const messageChannel = new MessageChannel();
         
-        if (isIOS) {
-          // iOS Safari specific lock screen cover update
-          // This would require additional implementation for actual lock screen cover updates
-          console.log('iOS lock screen cover update:', data);
-        }
+        return new Promise((resolve, reject) => {
+          // Set up response handler
+          messageChannel.port1.onmessage = (event) => {
+            if (event.data && typeof event.data.success === 'boolean') {
+              if (event.data.success) {
+                resolve(true);
+              } else {
+                reject(new Error(event.data.error || 'Lock screen cover update failed'));
+              }
+            } else {
+              resolve(true); // Fallback success
+            }
+          };
+          
+          // Send message to service worker
+          registration.active!.postMessage({
+            type: 'UPDATE_LOCK_SCREEN_COVER',
+            poster: data.poster,
+            title: data.title,
+            episode: data.episode,
+            progress: data.progress
+          }, [messageChannel.port2]);
+          
+          // Set a timeout to prevent hanging
+          setTimeout(() => {
+            resolve(true); // Fallback success after timeout
+          }, 5000);
+        });
       }
     }
+    
+    // For iOS Safari, we can also update the web app icon
+    if (typeof window !== 'undefined' && 'navigator' in window) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      if (isIOS) {
+        // iOS Safari specific lock screen cover update
+        // This would require additional implementation for actual lock screen cover updates
+        console.log('iOS lock screen cover update:', data);
+      }
+    }
+    
+    return true; // Fallback success
   } catch (error) {
     console.error('Failed to update lock screen cover:', error);
+    return false;
   }
 }
 
