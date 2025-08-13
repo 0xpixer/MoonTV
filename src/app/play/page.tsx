@@ -63,7 +63,7 @@ function PlayPageClient() {
   }, [blockAdEnabled]);
 
   // 视频基本信息
-  const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || '');
+  const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || searchParams.get('q') || '');
   const [videoYear, setVideoYear] = useState(searchParams.get('year') || '');
   const [videoCover, setVideoCover] = useState('');
   // 当前源和ID
@@ -75,6 +75,20 @@ function PlayPageClient() {
   // 搜索所需信息
   const [searchTitle] = useState(searchParams.get('stitle') || '');
   const [searchType] = useState(searchParams.get('stype') || '');
+  const [searchQueryParam] = useState(searchParams.get('q') || '');
+  const [preloadedItems] = useState<SearchResult[] | null>(() => {
+    const raw = searchParams.get('items');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      try {
+        return JSON.parse(decodeURIComponent(raw));
+      } catch (_) {
+        return null;
+      }
+    }
+  });
 
   // 是否需要优选
   const [needPrefer, setNeedPrefer] = useState(
@@ -522,7 +536,7 @@ function PlayPageClient() {
     };
 
     const initAll = async () => {
-      if (!currentSource && !currentId && !videoTitle && !searchTitle) {
+      if (!currentSource && !currentId && !videoTitle && !searchTitle && !searchQueryParam) {
         setError('缺少必要参数');
         setLoading(false);
         return;
@@ -535,7 +549,24 @@ function PlayPageClient() {
           : '🔍 正在搜索播放源...'
       );
 
-      let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+      let sourcesInfo: SearchResult[] = [];
+
+      if (preloadedItems && preloadedItems.length > 0) {
+        // 直接使用预加载结果（来自聚合卡片）
+        setAvailableSources(preloadedItems);
+        // 若初始没有标题，则用第一项的标题和年份做兜底
+        if (!videoTitleRef.current) {
+          setVideoTitle(preloadedItems[0].title);
+        }
+        if (!videoYearRef.current && preloadedItems[0].year) {
+          setVideoYear(preloadedItems[0].year);
+        }
+        sourcesInfo = preloadedItems;
+      } else {
+        // 根据搜索词获取全部源信息
+        sourcesInfo = await fetchSourcesData(searchTitle || videoTitle || searchQueryParam);
+      }
+
       if (
         currentSource &&
         currentId &&
