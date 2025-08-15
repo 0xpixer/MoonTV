@@ -1063,6 +1063,11 @@ function PlayPageClient() {
       typeof window !== 'undefined' &&
       typeof (window as any).webkitConvertPointFromNodeToPage === 'function';
 
+    // 检测PiP支持
+    const isPiPSupported = document.pictureInPictureEnabled || 
+                          (document as any).webkitSupportsPresentationMode && 
+                          typeof (document as any).webkitSetPresentationMode === 'function';
+
     // 非WebKit浏览器且播放器已存在，使用switch方法切换
     if (!isWebkit && artPlayerRef.current) {
       artPlayerRef.current.switch = videoUrl;
@@ -1107,7 +1112,7 @@ function PlayPageClient() {
         isLive: false,
         muted: isIOS && isPWA, // iOS PWA requires muted for autoplay
         autoplay: !(isIOS && isPWA), // Disable autoplay for iOS PWA initially
-        pip: true,
+        pip: isPiPSupported, // Only enable PiP if supported
         autoSize: false,
         autoMini: false,
         screenshot: false,
@@ -1231,6 +1236,40 @@ function PlayPageClient() {
               handleNextEpisode();
             },
           },
+          // PiP 按钮 - 仅在支持时显示
+          ...(isPiPSupported ? [{
+            position: 'right',
+            index: 1,
+            html: '<i class="art-icon-pip flex"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z" fill="currentColor"/></svg></i>',
+            tooltip: '画中画',
+            click: function (this: any) {
+              const video = this.video;
+              if (!video) return;
+              
+              try {
+                // 标准 PiP API
+                if (document.pictureInPictureEnabled) {
+                  if (document.pictureInPictureElement) {
+                    document.exitPictureInPicture();
+                  } else {
+                    video.requestPictureInPicture();
+                  }
+                }
+                // iOS Safari PiP API
+                else if ((video as any).webkitSupportsPresentationMode && 
+                         typeof (video as any).webkitSetPresentationMode === 'function') {
+                  const currentMode = (video as any).webkitPresentationMode;
+                  const newMode = currentMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture';
+                  (video as any).webkitSetPresentationMode(newMode);
+                }
+              } catch (error) {
+                console.error('PiP 操作失败:', error);
+                if (this.notice) {
+                  this.notice.show = 'PiP 不支持';
+                }
+              }
+            },
+          }] : []),
         ],
       });
 
@@ -1265,6 +1304,43 @@ function PlayPageClient() {
           
           document.addEventListener('touchstart', handleUserInteraction);
           document.addEventListener('click', handleUserInteraction);
+        }
+
+        // 设置 PiP 事件监听器
+        if (isPiPSupported && artPlayerRef.current?.video) {
+          const video = artPlayerRef.current.video as HTMLVideoElement;
+          
+          // 标准 PiP 事件
+          video.addEventListener('enterpictureinpicture', () => {
+            console.log('进入画中画模式');
+            if (artPlayerRef.current?.notice) {
+              artPlayerRef.current.notice.show = '已进入画中画模式';
+            }
+          });
+          
+          video.addEventListener('leavepictureinpicture', () => {
+            console.log('退出画中画模式');
+            if (artPlayerRef.current?.notice) {
+              artPlayerRef.current.notice.show = '已退出画中画模式';
+            }
+          });
+          
+          // iOS Safari PiP 事件
+          if ((video as any).webkitSupportsPresentationMode) {
+            video.addEventListener('webkitpresentationmodechanged', () => {
+              const mode = (video as any).webkitPresentationMode;
+              console.log('iOS PiP 模式变化:', mode);
+              if (mode === 'picture-in-picture') {
+                if (artPlayerRef.current?.notice) {
+                  artPlayerRef.current.notice.show = '已进入画中画模式';
+                }
+              } else {
+                if (artPlayerRef.current?.notice) {
+                  artPlayerRef.current.notice.show = '已退出画中画模式';
+                }
+              }
+            });
+          }
         }
       });
 
