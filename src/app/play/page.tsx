@@ -1238,39 +1238,53 @@ function PlayPageClient() {
             },
           },
           // PiP 按钮 - 仅在支持时显示
-          ...(isPiPSupported ? [{
+          ...([{
             position: 'right',
             index: 1,
             html: '<i class="art-icon-pip flex"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z" fill="currentColor"/></svg></i>',
             tooltip: '画中画',
             click: function (this: any) {
-              const video = this.video;
+              const video = this.video as HTMLVideoElement | undefined;
               if (!video) return;
               
+              // 动态检测当前环境对 PiP 的支持
+              const standardEnabled = typeof (document as any).pictureInPictureEnabled === 'boolean' && (document as any).pictureInPictureEnabled === true && !(video as any).disablePictureInPicture;
+              const webkitSupports = typeof (video as any).webkitSupportsPresentationMode === 'function' && (video as any).webkitSupportsPresentationMode('picture-in-picture') === true;
+              const supportsPiPNow = standardEnabled || webkitSupports;
+
               try {
-                // 标准 PiP API
-                if (document.pictureInPictureEnabled) {
-                  if (document.pictureInPictureElement) {
-                    document.exitPictureInPicture();
+                if (standardEnabled) {
+                  if ((document as any).pictureInPictureElement) {
+                    (document as any).exitPictureInPicture();
                   } else {
-                    video.requestPictureInPicture();
+                    (video as any).requestPictureInPicture();
                   }
+                  return;
                 }
-                // iOS Safari PiP API
-                else if ((video as any).webkitSupportsPresentationMode && 
-                         typeof (video as any).webkitSetPresentationMode === 'function') {
+
+                if (webkitSupports) {
                   const currentMode = (video as any).webkitPresentationMode;
                   const newMode = currentMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture';
                   (video as any).webkitSetPresentationMode(newMode);
+                  return;
                 }
+
+                // 不支持：在 iOS PWA 环境下，提供在 Safari 打开的兜底方案
+                if (!supportsPiPNow && (/iPad|iPhone|iPod/.test(navigator.userAgent)) && (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true)) {
+                  if (this.notice) this.notice.show = 'PWA 下不支持画中画，已尝试在 Safari 中打开';
+                  try { window.open(window.location.href, '_blank'); } catch (_) { /* ignore */ }
+                  return;
+                }
+
+                if (this.notice) this.notice.show = '当前环境不支持画中画';
               } catch (error) {
                 console.error('PiP 操作失败:', error);
                 if (this.notice) {
-                  this.notice.show = 'PiP 不支持';
+                  this.notice.show = 'PiP 操作失败';
                 }
               }
             },
-          }] : []),
+          }]),
         ],
       });
 
