@@ -1063,10 +1063,11 @@ function PlayPageClient() {
       typeof window !== 'undefined' &&
       typeof (window as any).webkitConvertPointFromNodeToPage === 'function';
 
-    // 检测PiP支持
-    const isPiPSupported = document.pictureInPictureEnabled || 
-                          (document as any).webkitSupportsPresentationMode && 
-                          typeof (document as any).webkitSetPresentationMode === 'function';
+    // 检测PiP支持（标准 API 或 iOS WebKit 私有 API）
+    const hasStandardPiP = typeof document !== 'undefined' && (document as any).pictureInPictureEnabled === true;
+    const videoProto = (typeof window !== 'undefined' ? (window as any).HTMLVideoElement?.prototype : undefined) as any;
+    const hasWebkitPiP = !!videoProto && 'webkitSupportsPresentationMode' in videoProto && 'webkitSetPresentationMode' in videoProto;
+    const isPiPSupported = !!hasStandardPiP || !!hasWebkitPiP;
 
     // 非WebKit浏览器且播放器已存在，使用switch方法切换
     if (!isWebkit && artPlayerRef.current) {
@@ -1247,19 +1248,6 @@ function PlayPageClient() {
               if (!video) return;
               
               try {
-                // PWA 模式特殊处理
-                const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                             (window.navigator as any).standalone === true;
-                
-                if (isPWA) {
-                  console.log('PWA 模式：尝试 PiP 操作');
-                  
-                  // 确保 PWA 模式下的视频属性设置
-                  video.setAttribute('webkit-playsinline', 'true');
-                  video.setAttribute('playsinline', 'true');
-                  video.setAttribute('x-webkit-airplay', 'allow');
-                }
-                
                 // 标准 PiP API
                 if (document.pictureInPictureEnabled) {
                   if (document.pictureInPictureElement) {
@@ -1275,32 +1263,10 @@ function PlayPageClient() {
                   const newMode = currentMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture';
                   (video as any).webkitSetPresentationMode(newMode);
                 }
-                // PWA 模式下的备用 PiP 尝试
-                else if (isPWA && typeof video.requestPictureInPicture === 'function') {
-                  console.log('PWA 模式：使用备用 PiP 方法');
-                  if (document.pictureInPictureElement) {
-                    document.exitPictureInPicture();
-                  } else {
-                    video.requestPictureInPicture();
-                  }
-                }
-                else {
-                  throw new Error('PiP 功能不可用');
-                }
               } catch (error) {
                 console.error('PiP 操作失败:', error);
                 if (this.notice) {
-                  this.notice.show = 'PiP 不支持或需要用户交互';
-                }
-                
-                // PWA 模式下的额外提示
-                const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                             (window.navigator as any).standalone === true;
-                if (isPWA) {
-                  console.log('PWA 模式 PiP 失败，可能需要先播放视频或用户交互');
-                  if (this.notice) {
-                    this.notice.show = 'PWA 模式：请先播放视频再尝试 PiP';
-                  }
+                  this.notice.show = 'PiP 不支持';
                 }
               }
             },
@@ -1375,74 +1341,6 @@ function PlayPageClient() {
                 }
               }
             });
-          }
-
-          // PWA 特定 PiP 处理
-          if (isPWA) {
-            console.log('PWA 模式：启用特殊 PiP 处理');
-            
-            // 为 PWA 模式添加额外的 PiP 支持检查
-            const checkPWAPiPSupport = () => {
-              // 检查是否在 PWA 模式下支持 PiP
-              const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                 (window.navigator as any).standalone === true;
-              
-              if (isStandalone) {
-                console.log('PWA 独立模式：检查 PiP 支持');
-                
-                // 尝试启用 PiP 功能
-                if (document.pictureInPictureEnabled) {
-                  console.log('PWA 模式：标准 PiP 可用');
-                  return true;
-                }
-                
-                // iOS PWA 特殊处理
-                if (isIOS && (video as any).webkitSupportsPresentationMode) {
-                  console.log('PWA 模式：iOS webkit PiP 可用');
-                  return true;
-                }
-                
-                // 尝试手动触发 PiP 支持
-                try {
-                  // 某些 PWA 模式需要手动设置视频属性
-                  video.setAttribute('webkit-playsinline', 'true');
-                  video.setAttribute('playsinline', 'true');
-                  video.setAttribute('x-webkit-airplay', 'allow');
-                  
-                  // 检查是否支持 PiP
-                  if (typeof video.requestPictureInPicture === 'function' || 
-                      (video as any).webkitSupportsPresentationMode) {
-                    console.log('PWA 模式：手动启用 PiP 成功');
-                    return true;
-                  }
-                } catch (error) {
-                  console.log('PWA 模式：手动启用 PiP 失败:', error);
-                }
-              }
-              
-              return false;
-            };
-            
-            // 延迟检查 PWA PiP 支持，确保 DOM 完全加载
-            setTimeout(() => {
-              const pwaPiPSupported = checkPWAPiPSupport();
-              console.log('PWA PiP 支持状态:', pwaPiPSupported);
-              
-              // 如果 PWA 模式下 PiP 不可用，显示提示
-              if (!pwaPiPSupported) {
-                console.log('PWA 模式：PiP 不可用，可能需要用户交互');
-                // 添加用户交互监听器来启用 PiP
-                const enablePiPOnInteraction = () => {
-                  console.log('PWA 模式：用户交互，尝试启用 PiP');
-                  checkPWAPiPSupport();
-                  document.removeEventListener('touchstart', enablePiPOnInteraction);
-                  document.removeEventListener('click', enablePiPOnInteraction);
-                };
-                
-                document.addEventListener('touchstart', enablePiPOnInteraction);
-                document.addEventListener('click', enablePiPOnInteraction);
-              }
-            }, 1000);
           }
         }
       });
