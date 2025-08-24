@@ -500,6 +500,19 @@ function PlayPageClient() {
         setSourceSearchLoading(false);
       }
     };
+    const normalizeTitle = (t: string) =>
+      (t || '')
+        .toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/[\p{P}\p{S}·・：:———_-]/gu, '');
+
+    const titlesLooselyMatch = (a: string, b: string) => {
+      const na = normalizeTitle(a);
+      const nb = normalizeTitle(b);
+      if (!na || !nb) return false;
+      return na === nb || na.includes(nb) || nb.includes(na);
+    };
+
     const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
       // 根据搜索词获取全部源信息
       try {
@@ -511,19 +524,67 @@ function PlayPageClient() {
         }
         const data = await response.json();
 
-        // 处理搜索结果，根据规则过滤
-        const results = data.results.filter(
-          (result: SearchResult) =>
-            result.title.replaceAll(' ', '').toLowerCase() ===
-              videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
-            (videoYearRef.current
-              ? result.year.toLowerCase() === videoYearRef.current.toLowerCase()
-              : true) &&
-            (searchType
-              ? (searchType === 'tv' && result.episodes.length > 1) ||
-                (searchType === 'movie' && result.episodes.length === 1)
-              : true)
+        const all: SearchResult[] = data.results || [];
+
+        // 优先规则：
+        // 1) 标题宽松匹配且集数有效
+        // 2) 年份匹配优先，但不作为硬性条件
+        // 3) 若无匹配，退化为标题包含关系 + 集数有效
+        // 4) 若仍无，选择集数最多的若干项
+
+        const byLooseTitle = all.filter((r: SearchResult) =>
+          titlesLooselyMatch(r.title, videoTitleRef.current)
         );
+        const withEpisodes = byLooseTitle.filter(
+          (r: SearchResult) => Array.isArray(r.episodes) && r.episodes.length > 0
+        );
+
+        // 应用类型约束（tv/movie）
+        const applyTypeConstraint = (list: SearchResult[]) =>
+          list.filter((r) =>
+            searchType
+              ? (searchType === 'tv' && r.episodes.length > 1) ||
+                (searchType === 'movie' && r.episodes.length === 1)
+              : true
+          );
+
+        // 年份加权排序：匹配给定年份的排前面
+        const sortByYearPreference = (list: SearchResult[]) => {
+          const targetYear = (videoYearRef.current || '').toLowerCase();
+          return [...list].sort((a, b) => {
+            const ay = (a.year || '').toLowerCase();
+            const by = (b.year || '').toLowerCase();
+            const aMatch = targetYear && ay === targetYear ? 1 : 0;
+            const bMatch = targetYear && by === targetYear ? 1 : 0;
+            if (aMatch !== bMatch) return bMatch - aMatch;
+            // 次级依据：集数多的优先
+            return (b.episodes?.length || 0) - (a.episodes?.length || 0);
+          });
+        };
+
+        let results: SearchResult[] = applyTypeConstraint(
+          sortByYearPreference(withEpisodes)
+        );
+
+        if (results.length === 0) {
+          const fallbackLoose = all.filter((r: SearchResult) =>
+            titlesLooselyMatch(r.title, videoTitleRef.current) ||
+            titlesLooselyMatch(r.title, query)
+          );
+          const fallbackWithEpisodes = fallbackLoose.filter(
+            (r: SearchResult) => Array.isArray(r.episodes) && r.episodes.length > 0
+          );
+          results = applyTypeConstraint(sortByYearPreference(fallbackWithEpisodes));
+        }
+
+        if (results.length === 0) {
+          // 最终兜底：按集数多少排序选前若干个
+          results = [...all]
+            .filter((r) => Array.isArray(r.episodes))
+            .sort((a, b) => (b.episodes?.length || 0) - (a.episodes?.length || 0))
+            .slice(0, 8);
+        }
+
         setAvailableSources(results);
         return results;
       } catch (err) {
@@ -552,16 +613,20 @@ function PlayPageClient() {
       let sourcesInfo: SearchResult[] = [];
 
       if (preloadedItems && preloadedItems.length > 0) {
-        // 直接使用预加载结果（来自聚合卡片）
-        setAvailableSources(preloadedItems);
+        // 直接使用预加载结果（来自聚合卡片），优先选择有集数的数据
+        const preWithEpisodes = preloadedItems.filter(
+          (r) => Array.isArray(r.episodes) && r.episodes.length > 0
+        );
+        const chosen = preWithEpisodes.length > 0 ? preWithEpisodes : preloadedItems;
+        setAvailableSources(chosen);
         // 若初始没有标题，则用第一项的标题和年份做兜底
         if (!videoTitleRef.current) {
-          setVideoTitle(preloadedItems[0].title);
+          setVideoTitle(chosen[0].title);
         }
-        if (!videoYearRef.current && preloadedItems[0].year) {
-          setVideoYear(preloadedItems[0].year);
+        if (!videoYearRef.current && chosen[0].year) {
+          setVideoYear(chosen[0].year);
         }
-        sourcesInfo = preloadedItems;
+        sourcesInfo = chosen;
       } else {
         // 根据搜索词获取全部源信息
         sourcesInfo = await fetchSourcesData(searchTitle || videoTitle || searchQueryParam);
@@ -609,6 +674,14 @@ function PlayPageClient() {
       }
 
       console.log(detailData.source, detailData.id);
+
+      // 如果所选详情没有有效集数，尝试直接拉取详情数据作为兜底
+      if (!detailData.episodes || detailData.episodes.length === 0) {
+        const enriched = await fetchSourceDetail(detailData.source, detailData.id);
+        if (enriched.length > 0) {
+          detailData = enriched[0];
+        }
+      }
 
       setNeedPrefer(false);
       setCurrentSource(detailData.source);

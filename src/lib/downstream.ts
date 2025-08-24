@@ -134,10 +134,16 @@ export async function searchFromApi(
             return pageData.list.map((item: ApiSearchItem) => {
               let episodes: string[] = [];
 
-              // 使用正则表达式从 vod_play_url 提取 m3u8 链接
+              // 与第一页保持一致：按 $$$ 分片，选择匹配最多 m3u8 的分片
               if (item.vod_play_url) {
                 const m3u8Regex = /\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
-                episodes = item.vod_play_url.match(m3u8Regex) || [];
+                const vodPlayUrlArray = item.vod_play_url.split('$$$');
+                vodPlayUrlArray.forEach((chunk: string) => {
+                  const matches = chunk.match(m3u8Regex) || [];
+                  if (matches.length > episodes.length) {
+                    episodes = matches;
+                  }
+                });
               }
 
               episodes = Array.from(new Set(episodes)).map((link: string) => {
@@ -232,8 +238,23 @@ export async function getDetailFromApi(
   if (videoDetail.vod_play_url) {
     const playSources = videoDetail.vod_play_url.split('$$$');
     if (playSources.length > 0) {
-      const mainSource = playSources[0];
-      const episodeList = mainSource.split('#');
+      // 选择包含最多有效 m3u8 的分片，避免首个分片为空的情况
+      let bestChunk = '';
+      let bestCount = -1;
+      playSources.forEach((chunk: string) => {
+        const candidate = chunk.split('#')
+          .map((ep: string) => {
+            const parts = ep.split('$');
+            return parts.length > 1 ? parts[1] : '';
+          })
+          .filter((url: string) => url && (url.startsWith('http://') || url.startsWith('https://')));
+        if (candidate.length > bestCount) {
+          bestCount = candidate.length;
+          bestChunk = chunk;
+        }
+      });
+
+      const episodeList = bestChunk ? bestChunk.split('#') : [];
       episodes = episodeList
         .map((ep: string) => {
           const parts = ep.split('$');
