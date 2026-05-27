@@ -12,9 +12,9 @@ import {
   saveFavorite,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { savePlayItemsHandoff } from '@/lib/play-handoff';
 import { SearchResult } from '@/lib/types';
 import { processImageUrlWithCache } from '@/lib/utils';
-
 
 interface VideoCardProps {
   id?: string;
@@ -32,7 +32,6 @@ interface VideoCardProps {
   onDelete?: () => void;
   rate?: string;
   items?: SearchResult[];
-
 }
 
 export default function VideoCard({
@@ -51,7 +50,6 @@ export default function VideoCard({
   onDelete,
   rate,
   items,
-
 }: VideoCardProps) {
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
@@ -102,7 +100,7 @@ export default function VideoCard({
   // 重试加载图片
   const handleImageRetry = () => {
     if (retryCount < 2) {
-      setRetryCount(prev => prev + 1);
+      setRetryCount((prev) => prev + 1);
       setImageError(false);
     }
   };
@@ -132,15 +130,15 @@ export default function VideoCard({
   }, [storageKey]);
 
   // 获取收藏状态
-  const fetchFavoriteStatus = async () => {
+  const fetchFavoriteStatus = useCallback(async () => {
     if (!parsedSource || !parsedId) return;
     try {
       const status = await isFavorited(parsedSource, parsedId);
       setFavorited(status);
-    } catch (error) {
-      console.error('Failed to fetch favorite status:', error);
+    } catch {
+      setFavorited(false);
     }
-  };
+  }, [parsedSource, parsedId]);
 
   // 订阅收藏状态更新
   useEffect(() => {
@@ -150,73 +148,122 @@ export default function VideoCard({
       fetchFavoriteStatus();
     });
     return unsubscribe;
-  }, [parsedSource, parsedId]);
+  }, [parsedSource, parsedId, fetchFavoriteStatus]);
 
   // 处理收藏/取消收藏
-  const handleFavoriteToggle = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!parsedSource || !parsedId || isLoading) return;
-    setIsLoading(true);
-    try {
-      if (favorited) {
-        await deleteFavorite(parsedSource, parsedId);
-        setFavorited(false);
-      } else {
-        await saveFavorite(parsedSource, parsedId, {
-          title: actualTitle,
-          cover: actualPoster,
-          total_episodes: episodes || 0,
-          source_name: source_name || '',
-          year: year || '',
-          save_time: Date.now(),
-          search_title: query,
-        });
-        setFavorited(true);
+  const handleFavoriteToggle = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!parsedSource || !parsedId || isLoading) return;
+      setIsLoading(true);
+      try {
+        if (favorited) {
+          await deleteFavorite(parsedSource, parsedId);
+          setFavorited(false);
+        } else {
+          await saveFavorite(parsedSource, parsedId, {
+            title: actualTitle,
+            cover: actualPoster,
+            total_episodes: episodes || 0,
+            source_name: source_name || '',
+            year: year || '',
+            save_time: Date.now(),
+            search_title: query,
+          });
+          setFavorited(true);
+        }
+      } catch {
+        return;
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [parsedSource, parsedId, favorited, isLoading, actualTitle, actualPoster, episodes, source_name, query]);
+    },
+    [
+      parsedSource,
+      parsedId,
+      favorited,
+      isLoading,
+      actualTitle,
+      actualPoster,
+      episodes,
+      source_name,
+      query,
+      year,
+    ]
+  );
 
   // 处理播放记录删除
-  const handleDeletePlayRecord = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!parsedSource || !parsedId || isLoading) return;
-    setIsLoading(true);
-    try {
-      await deletePlayRecord(parsedSource, parsedId);
-      onDelete?.();
-    } catch (error) {
-      console.error('Failed to delete play record:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [parsedSource, parsedId, isLoading, onDelete]);
+  const handleDeletePlayRecord = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!parsedSource || !parsedId || isLoading) return;
+      setIsLoading(true);
+      try {
+        await deletePlayRecord(parsedSource, parsedId);
+        onDelete?.();
+      } catch {
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [parsedSource, parsedId, isLoading, onDelete]
+  );
 
   // 处理点击事件
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    if (from === 'douban' && douban_id) {
-      // Douban cards go directly to play page, which will search for sources
-      router.push(`/play?title=${encodeURIComponent(actualTitle)}&year=${encodeURIComponent(year || '')}`);
-    } else if (from === 'search' && isAggregate && items) {
-      router.push(`/play?q=${encodeURIComponent(query)}&items=${encodeURIComponent(JSON.stringify(items))}`);
-    } else if (source && id) {
-      router.push(`/play?source=${source}&id=${id}&title=${encodeURIComponent(actualTitle)}`);
-    }
-  }, [from, douban_id, actualTitle, year, isAggregate, items, query, source, id, router]);
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (from === 'douban' && douban_id) {
+        // Douban cards go directly to play page, which will search for sources
+        router.push(
+          `/play?title=${encodeURIComponent(
+            actualTitle
+          )}&year=${encodeURIComponent(year || '')}`
+        );
+      } else if (from === 'search' && isAggregate && items) {
+        const params = new URLSearchParams();
+        if (query) params.set('q', query);
+
+        const itemsKey = savePlayItemsHandoff(items);
+        if (itemsKey) {
+          params.set('itemsKey', itemsKey);
+        } else {
+          params.set('items', JSON.stringify(items));
+        }
+
+        router.push(`/play?${params.toString()}`);
+      } else if (source && id) {
+        router.push(
+          `/play?source=${source}&id=${id}&title=${encodeURIComponent(
+            actualTitle
+          )}`
+        );
+      }
+    },
+    [
+      from,
+      douban_id,
+      actualTitle,
+      year,
+      isAggregate,
+      items,
+      query,
+      source,
+      id,
+      router,
+    ]
+  );
 
   return (
-    <div 
+    <div
       className='group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:z-10 w-full max-w-full min-w-0'
       onClick={handleClick}
-      style={{ 
+      style={{
         touchAction: 'manipulation',
-        WebkitTapHighlightColor: 'transparent'
+        WebkitTapHighlightColor: 'transparent',
       }}
     >
       {/* 海报容器 */}
@@ -230,16 +277,14 @@ export default function VideoCard({
           className='object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
           sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
           priority={false}
-          onError={(e) => {
-            console.log('Image error:', actualPoster, e);
+          onError={() => {
             setImageError(true);
           }}
           onLoad={() => {
-            console.log('Image loaded successfully:', actualPoster);
             setImageError(false);
           }}
         />
-        
+
         {/* 图片加载失败时的占位符 */}
         {imageError && (
           <div className='absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center'>
@@ -265,7 +310,7 @@ export default function VideoCard({
 
         {/* 悬停遮罩 - Netflix style - 移动端不显示 */}
         <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 hidden md:block' />
-        
+
         {/* 播放按钮 - 移动端始终显示，桌面端悬停显示 */}
         <div className='absolute inset-0 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-out'>
           <div className='bg-white/50 md:bg-white/90 backdrop-blur-sm rounded-full p-4 md:p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300'>
@@ -329,14 +374,21 @@ export default function VideoCard({
               ⭐ {rate}
             </div>
           )}
-          
+
           {/* 集数 */}
           {episodes && episodes > 1 && (
             <div className='bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
               📺 {episodes}集
             </div>
           )}
-          
+
+          {/* 当前观看集数 */}
+          {currentEpisode && currentEpisode > 0 && (
+            <div className='bg-brand-500/90 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
+              看到第 {currentEpisode} 集
+            </div>
+          )}
+
           {/* 年份 */}
           {year && (
             <div className='bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
@@ -348,7 +400,7 @@ export default function VideoCard({
         {/* 播放进度条 */}
         {progress > 0 && (
           <div className='absolute bottom-0 left-0 right-0 h-1 bg-black/30'>
-            <div 
+            <div
               className='h-full bg-brand-500 transition-all duration-500 ease-out'
               style={{ width: `${(progress / 100) * 100}%` }}
             />

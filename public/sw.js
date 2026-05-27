@@ -12,14 +12,61 @@ const STATIC_FILES = [
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
   '/apple-touch-icon.png',
-  '/apple-touch-icon-precomposed.png'
+  '/apple-touch-icon-precomposed.png',
 ];
+
+function getCacheStrategyForRequest(request, url) {
+  if (request.method !== 'GET') return null;
+  if (!url.protocol.startsWith('http')) return null;
+  if (url.pathname.startsWith('/api/')) return 'network-only';
+  if (url.pathname === '/' || url.pathname.startsWith('/_next/')) {
+    return 'network-first';
+  }
+  if (url.pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp)$/i)) {
+    return 'cache-first';
+  }
+  return 'cache-first';
+}
+
+function networkFirst(request) {
+  return fetch(request)
+    .then((response) => {
+      if (response.status === 200) {
+        const responseClone = response.clone();
+        caches.open(DYNAMIC_CACHE).then((cache) => {
+          cache.put(request, responseClone);
+        });
+      }
+      return response;
+    })
+    .catch(() => {
+      return caches.match(request);
+    });
+}
+
+function cacheFirst(request) {
+  return caches.match(request).then((response) => {
+    if (response) {
+      return response;
+    }
+    return fetch(request).then((response) => {
+      if (response.status === 200) {
+        const responseClone = response.clone();
+        caches.open(DYNAMIC_CACHE).then((cache) => {
+          cache.put(request, responseClone);
+        });
+      }
+      return response;
+    });
+  });
+}
 
 // Install event - cache static files
 self.addEventListener('install', (event) => {
   console.log('PWA: Service Worker installing...');
   event.waitUntil(
-    caches.open(STATIC_CACHE)
+    caches
+      .open(STATIC_CACHE)
       .then((cache) => {
         console.log('PWA: Caching static files');
         return cache.addAll(STATIC_FILES);
@@ -38,7 +85,8 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   console.log('PWA: Service Worker activating...');
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
@@ -64,90 +112,22 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
+  const strategy = getCacheStrategyForRequest(request, url);
+  if (!strategy) {
     return;
   }
 
-  // Skip chrome-extension and other non-http requests
-  if (!url.protocol.startsWith('http')) {
+  if (strategy === 'network-only') {
+    event.respondWith(fetch(request));
     return;
   }
 
-  // Handle different types of requests
-  if (url.pathname === '/' || url.pathname.startsWith('/_next/')) {
-    // For app routes, try network first, then cache
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Cache successful responses
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseClone);
-              });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache
-          return caches.match(request);
-        })
-    );
-  } else if (url.pathname.startsWith('/api/')) {
-    // For API requests, try network first, then cache
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Cache successful responses
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseClone);
-              });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache
-          return caches.match(request);
-        })
-    );
-  } else if (url.pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp)$/)) {
-    // For images, try cache first, then network
-    event.respondWith(
-      caches.match(request)
-        .then((response) => {
-          if (response) {
-            return response;
-          }
-          return fetch(request)
-            .then((response) => {
-              if (response.status === 200) {
-                const responseClone = response.clone();
-                caches.open(DYNAMIC_CACHE)
-                  .then((cache) => {
-                    cache.put(request, responseClone);
-                  });
-              }
-              return response;
-            });
-        })
-    );
-  } else {
-    // For other static files, try cache first, then network
-    event.respondWith(
-      caches.match(request)
-        .then((response) => {
-          if (response) {
-            return response;
-          }
-          return fetch(request);
-        })
-    );
+  if (strategy === 'network-first') {
+    event.respondWith(networkFirst(request));
+    return;
   }
+
+  event.respondWith(cacheFirst(request));
 });
 
 // Background sync for offline functionality
@@ -170,20 +150,20 @@ self.addEventListener('push', (event) => {
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
-        primaryKey: 1
+        primaryKey: 1,
       },
       actions: [
         {
           action: 'explore',
           title: 'View',
-          icon: '/icons/icon-192x192.png'
+          icon: '/icons/icon-192x192.png',
         },
         {
           action: 'close',
           title: 'Close',
-          icon: '/icons/icon-192x192.png'
-        }
-      ]
+          icon: '/icons/icon-192x192.png',
+        },
+      ],
     };
 
     event.waitUntil(
@@ -198,9 +178,7 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
+    event.waitUntil(clients.openWindow('/'));
   }
 });
 
@@ -220,7 +198,7 @@ async function doBackgroundSync() {
 async function updateLockScreenCover(data) {
   try {
     console.log('PWA: Updating lock screen cover:', data.title);
-    
+
     // For iOS, we can't directly update the lock screen
     // But we can store the current playing info for potential use
     const currentPlaying = {
@@ -228,13 +206,16 @@ async function updateLockScreenCover(data) {
       poster: data.poster,
       episode: data.episode,
       progress: data.progress,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     // Store in cache for potential use
     const cache = await caches.open(DYNAMIC_CACHE);
-    await cache.put('/current-playing', new Response(JSON.stringify(currentPlaying)));
-    
+    await cache.put(
+      '/current-playing',
+      new Response(JSON.stringify(currentPlaying))
+    );
+
     return true;
   } catch (error) {
     console.error('PWA: Failed to update lock screen cover:', error);
@@ -259,7 +240,10 @@ self.addEventListener('message', (event) => {
           .catch((error) => {
             console.error('PWA: Lock screen cover update failed:', error);
             try {
-              event.ports[0].postMessage({ success: false, error: error.message });
+              event.ports[0].postMessage({
+                success: false,
+                error: error.message,
+              });
             } catch (portError) {
               console.error('PWA: Failed to send error response:', portError);
             }
@@ -267,11 +251,16 @@ self.addEventListener('message', (event) => {
       );
     } else {
       // Handle case where no message ports are available
-      console.log('PWA: No message ports available for lock screen cover update');
+      console.log(
+        'PWA: No message ports available for lock screen cover update'
+      );
       event.waitUntil(
         updateLockScreenCover(event.data)
           .then((success) => {
-            console.log('PWA: Lock screen cover updated successfully:', success);
+            console.log(
+              'PWA: Lock screen cover updated successfully:',
+              success
+            );
           })
           .catch((error) => {
             console.error('PWA: Lock screen cover update failed:', error);

@@ -3,7 +3,14 @@
 
 import { ChevronUp, Search, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   addSearchHistory,
@@ -12,6 +19,8 @@ import {
   getSearchHistory,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { normalizeSearchQuery } from '@/lib/search-query';
+import { groupSearchResults, sortSearchResults } from '@/lib/search-results';
 import { SearchResult } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';
@@ -29,6 +38,7 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const lastSubmittedQueryRef = useRef<string | null>(null);
 
   // 获取默认聚合设置：只读取用户本地设置，默认为 true
   const getDefaultAggregate = () => {
@@ -47,49 +57,8 @@ function SearchPageClient() {
 
   // 聚合后的结果（按标题和年份分组）
   const aggregatedResults = useMemo(() => {
-    const map = new Map<string, SearchResult[]>();
-    searchResults.forEach((item) => {
-      // 使用 title + year + type 作为键，year 必然存在，但依然兜底 'unknown'
-      const key = `${item.title.replaceAll(' ', '')}-${
-        item.year || 'unknown'
-      }-${item.episodes.length === 1 ? 'movie' : 'tv'}`;
-      const arr = map.get(key) || [];
-      arr.push(item);
-      map.set(key, arr);
-    });
-    return Array.from(map.entries()).sort((a, b) => {
-      // 优先排序：标题与搜索词完全一致的排在前面
-      const aExactMatch = a[1][0].title
-        .replaceAll(' ', '')
-        .includes(searchQuery.trim().replaceAll(' ', ''));
-      const bExactMatch = b[1][0].title
-        .replaceAll(' ', '')
-        .includes(searchQuery.trim().replaceAll(' ', ''));
-
-      if (aExactMatch && !bExactMatch) return -1;
-      if (!aExactMatch && bExactMatch) return 1;
-
-      // 年份排序
-      if (a[1][0].year === b[1][0].year) {
-        return a[0].localeCompare(b[0]);
-      } else {
-        // 处理 unknown 的情况
-        const aYear = a[1][0].year;
-        const bYear = b[1][0].year;
-
-        if (aYear === 'unknown' && bYear === 'unknown') {
-          return 0;
-        } else if (aYear === 'unknown') {
-          return 1; // a 排在后面
-        } else if (bYear === 'unknown') {
-          return -1; // b 排在后面
-        } else {
-          // 都是数字年份，按数字大小排序（大的在前面）
-          return aYear > bYear ? -1 : 1;
-        }
-      }
-    });
-  }, [searchResults]);
+    return groupSearchResults(searchResults, searchQuery);
+  }, [searchResults, searchQuery]);
 
   useEffect(() => {
     // 无搜索参数时聚焦搜索框
@@ -144,11 +113,54 @@ function SearchPageClient() {
     };
   }, []);
 
+  const fetchSearchResults = useCallback(async (query: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(query.trim())}`
+      );
+      const data = await response.json();
+      const results = Array.isArray(data.results) ? data.results : [];
+      setSearchResults(sortSearchResults(results, query));
+      setShowResults(true);
+    } catch (error) {
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const submitSearch = useCallback(
+    (rawQuery: string) => {
+      const trimmed = normalizeSearchQuery(rawQuery);
+      if (!trimmed) return;
+
+      setSearchQuery(trimmed);
+      setIsLoading(true);
+      setShowResults(true);
+
+      if (searchParams.get('q') !== trimmed) {
+        lastSubmittedQueryRef.current = trimmed;
+        router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+      }
+
+      fetchSearchResults(trimmed);
+      addSearchHistory(trimmed);
+    },
+    [fetchSearchResults, router, searchParams]
+  );
+
   useEffect(() => {
     // 当搜索参数变化时更新搜索状态
     const query = searchParams.get('q');
     if (query) {
       setSearchQuery(query);
+
+      if (lastSubmittedQueryRef.current === query) {
+        lastSubmittedQueryRef.current = null;
+        return;
+      }
+
       fetchSearchResults(query);
 
       // 保存到搜索历史 (事件监听会自动更新界面)
@@ -156,66 +168,18 @@ function SearchPageClient() {
     } else {
       setShowResults(false);
     }
-  }, [searchParams]);
-
-  const fetchSearchResults = async (query: string) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query.trim())}`
-      );
-      const data = await response.json();
-      setSearchResults(
-        data.results.sort((a: SearchResult, b: SearchResult) => {
-          // 优先排序：标题与搜索词完全一致的排在前面
-          const aExactMatch = a.title === query.trim();
-          const bExactMatch = b.title === query.trim();
-
-          if (aExactMatch && !bExactMatch) return -1;
-          if (!aExactMatch && bExactMatch) return 1;
-
-          // 如果都匹配或都不匹配，则按原来的逻辑排序
-          if (a.year === b.year) {
-            return a.title.localeCompare(b.title);
-          } else {
-            // 处理 unknown 的情况
-            if (a.year === 'unknown' && b.year === 'unknown') {
-              return 0;
-            } else if (a.year === 'unknown') {
-              return 1; // a 排在后面
-            } else if (b.year === 'unknown') {
-              return -1; // b 排在后面
-            } else {
-              // 都是数字年份，按数字大小排序（大的在前面）
-              return parseInt(a.year) > parseInt(b.year) ? -1 : 1;
-            }
-          }
-        })
-      );
-      setShowResults(true);
-    } catch (error) {
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [fetchSearchResults, searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
-    if (!trimmed) return;
+    submitSearch(searchQuery);
+  };
 
-    // 回显搜索框
-    setSearchQuery(trimmed);
-    setIsLoading(true);
-    setShowResults(true);
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
 
-    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-    // 直接发请求
-    fetchSearchResults(trimmed);
-
-    // 保存到搜索历史 (事件监听会自动更新界面)
-    addSearchHistory(trimmed);
+    e.preventDefault();
+    submitSearch(searchQuery);
   };
 
   // 返回顶部功能
@@ -245,9 +209,17 @@ function SearchPageClient() {
                 type='text'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 placeholder='搜索电影、电视剧...'
-                className='w-full h-12 rounded-lg bg-gray-50/80 py-3 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white border border-gray-200/50 shadow-sm dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-500 dark:focus:bg-gray-700 dark:border-gray-700'
+                className='w-full h-12 rounded-lg bg-gray-50/80 py-3 pl-10 pr-12 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white border border-gray-200/50 shadow-sm dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-500 dark:focus:bg-gray-700 dark:border-gray-700'
               />
+              <button
+                type='submit'
+                aria-label='搜索'
+                className='absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-md flex items-center justify-center text-gray-500 hover:text-green-600 hover:bg-green-50 transition-colors dark:text-gray-400 dark:hover:text-green-400 dark:hover:bg-gray-700'
+              >
+                <Search className='h-4 w-4' />
+              </button>
             </div>
           </form>
         </div>
@@ -324,7 +296,6 @@ function SearchPageClient() {
                           }
                           year={item.year}
                           from='search'
-
                         />
                       </div>
                     ))}

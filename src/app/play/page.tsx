@@ -17,6 +17,8 @@ import {
   savePlayRecord,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { readPlayItemsFromSearchParams } from '@/lib/play-handoff';
+import { rankSourceTestResults } from '@/lib/source-ranking';
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
@@ -59,7 +61,9 @@ function PlayPageClient() {
   const blockAdEnabledRef = useRef(blockAdEnabled);
 
   // 视频基本信息
-  const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || searchParams.get('q') || '');
+  const [videoTitle, setVideoTitle] = useState(
+    searchParams.get('title') || searchParams.get('q') || ''
+  );
   const [videoYear, setVideoYear] = useState(searchParams.get('year') || '');
   const [videoCover, setVideoCover] = useState('');
   // 当前源和ID
@@ -73,17 +77,7 @@ function PlayPageClient() {
   const [searchType] = useState(searchParams.get('stype') || '');
   const [searchQueryParam] = useState(searchParams.get('q') || '');
   const [preloadedItems] = useState<SearchResult[] | null>(() => {
-    const raw = searchParams.get('items');
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch (_) {
-      try {
-        return JSON.parse(decodeURIComponent(raw));
-      } catch (_) {
-        return null;
-      }
-    }
+    return readPlayItemsFromSearchParams(searchParams);
   });
 
   // 是否需要优选
@@ -256,44 +250,8 @@ function PlayPageClient() {
       return sources[0];
     }
 
-    // 找出所有有效速度的最大值，用于线性映射
-    const validSpeeds = successfulResults
-      .map((result) => {
-        const speedStr = result.testResult.loadSpeed;
-        if (speedStr === '未知' || speedStr === '测量中...') return 0;
-
-        const match = speedStr.match(/^([\d.]+)\s*(KB\/s|MB\/s)$/);
-        if (!match) return 0;
-
-        const value = parseFloat(match[1]);
-        const unit = match[2];
-        return unit === 'MB/s' ? value * 1024 : value; // 统一转换为 KB/s
-      })
-      .filter((speed) => speed > 0);
-
-    const maxSpeed = validSpeeds.length > 0 ? Math.max(...validSpeeds) : 1024; // 默认1MB/s作为基准
-
-    // 找出所有有效延迟的最小值和最大值，用于线性映射
-    const validPings = successfulResults
-      .map((result) => result.testResult.pingTime)
-      .filter((ping) => ping > 0);
-
-    const minPing = validPings.length > 0 ? Math.min(...validPings) : 50;
-    const maxPing = validPings.length > 0 ? Math.max(...validPings) : 1000;
-
-    // 计算每个结果的评分
-    const resultsWithScore = successfulResults.map((result) => ({
-      ...result,
-      score: calculateSourceScore(
-        result.testResult,
-        maxSpeed,
-        minPing,
-        maxPing
-      ),
-    }));
-
     // 按综合评分排序，选择最佳播放源
-    resultsWithScore.sort((a, b) => b.score - a.score);
+    const resultsWithScore = rankSourceTestResults(successfulResults);
 
     console.log('播放源评分排序结果:');
     resultsWithScore.forEach((result, index) => {
@@ -307,76 +265,6 @@ function PlayPageClient() {
     });
 
     return resultsWithScore[0].source;
-  };
-
-  // 计算播放源综合评分
-  const calculateSourceScore = (
-    testResult: {
-      quality: string;
-      loadSpeed: string;
-      pingTime: number;
-    },
-    maxSpeed: number,
-    minPing: number,
-    maxPing: number
-  ): number => {
-    let score = 0;
-
-    // 分辨率评分 (40% 权重)
-    const qualityScore = (() => {
-      switch (testResult.quality) {
-        case '4K':
-          return 100;
-        case '2K':
-          return 85;
-        case '1080p':
-          return 75;
-        case '720p':
-          return 60;
-        case '480p':
-          return 40;
-        case 'SD':
-          return 20;
-        default:
-          return 0;
-      }
-    })();
-    score += qualityScore * 0.4;
-
-    // 下载速度评分 (40% 权重) - 基于最大速度线性映射
-    const speedScore = (() => {
-      const speedStr = testResult.loadSpeed;
-      if (speedStr === '未知' || speedStr === '测量中...') return 30;
-
-      // 解析速度值
-      const match = speedStr.match(/^([\d.]+)\s*(KB\/s|MB\/s)$/);
-      if (!match) return 30;
-
-      const value = parseFloat(match[1]);
-      const unit = match[2];
-      const speedKBps = unit === 'MB/s' ? value * 1024 : value;
-
-      // 基于最大速度线性映射，最高100分
-      const speedRatio = speedKBps / maxSpeed;
-      return Math.min(100, Math.max(0, speedRatio * 100));
-    })();
-    score += speedScore * 0.4;
-
-    // 网络延迟评分 (20% 权重) - 基于延迟范围线性映射
-    const pingScore = (() => {
-      const ping = testResult.pingTime;
-      if (ping <= 0) return 0; // 无效延迟给默认分
-
-      // 如果所有延迟都相同，给满分
-      if (maxPing === minPing) return 100;
-
-      // 线性映射：最低延迟=100分，最高延迟=0分
-      const pingRatio = (maxPing - ping) / (maxPing - minPing);
-      return Math.min(100, Math.max(0, pingRatio * 100));
-    })();
-    score += pingScore * 0.2;
-
-    return Math.round(score * 100) / 100; // 保留两位小数
   };
 
   // 更新视频地址
@@ -532,7 +420,8 @@ function PlayPageClient() {
           titlesLooselyMatch(r.title, videoTitleRef.current)
         );
         const withEpisodes = byLooseTitle.filter(
-          (r: SearchResult) => Array.isArray(r.episodes) && r.episodes.length > 0
+          (r: SearchResult) =>
+            Array.isArray(r.episodes) && r.episodes.length > 0
         );
 
         // 应用类型约束（tv/movie）
@@ -563,21 +452,27 @@ function PlayPageClient() {
         );
 
         if (results.length === 0) {
-          const fallbackLoose = all.filter((r: SearchResult) =>
-            titlesLooselyMatch(r.title, videoTitleRef.current) ||
-            titlesLooselyMatch(r.title, query)
+          const fallbackLoose = all.filter(
+            (r: SearchResult) =>
+              titlesLooselyMatch(r.title, videoTitleRef.current) ||
+              titlesLooselyMatch(r.title, query)
           );
           const fallbackWithEpisodes = fallbackLoose.filter(
-            (r: SearchResult) => Array.isArray(r.episodes) && r.episodes.length > 0
+            (r: SearchResult) =>
+              Array.isArray(r.episodes) && r.episodes.length > 0
           );
-          results = applyTypeConstraint(sortByYearPreference(fallbackWithEpisodes));
+          results = applyTypeConstraint(
+            sortByYearPreference(fallbackWithEpisodes)
+          );
         }
 
         if (results.length === 0) {
           // 最终兜底：按集数多少排序选前若干个
           results = [...all]
             .filter((r) => Array.isArray(r.episodes))
-            .sort((a, b) => (b.episodes?.length || 0) - (a.episodes?.length || 0))
+            .sort(
+              (a, b) => (b.episodes?.length || 0) - (a.episodes?.length || 0)
+            )
             .slice(0, 8);
         }
 
@@ -593,7 +488,13 @@ function PlayPageClient() {
     };
 
     const initAll = async () => {
-      if (!currentSource && !currentId && !videoTitle && !searchTitle && !searchQueryParam) {
+      if (
+        !currentSource &&
+        !currentId &&
+        !videoTitle &&
+        !searchTitle &&
+        !searchQueryParam
+      ) {
         setError('缺少必要参数');
         setLoading(false);
         return;
@@ -613,7 +514,8 @@ function PlayPageClient() {
         const preWithEpisodes = preloadedItems.filter(
           (r) => Array.isArray(r.episodes) && r.episodes.length > 0
         );
-        const chosen = preWithEpisodes.length > 0 ? preWithEpisodes : preloadedItems;
+        const chosen =
+          preWithEpisodes.length > 0 ? preWithEpisodes : preloadedItems;
         setAvailableSources(chosen);
         // 若初始没有标题，则用第一项的标题和年份做兜底
         if (!videoTitleRef.current) {
@@ -625,7 +527,9 @@ function PlayPageClient() {
         sourcesInfo = chosen;
       } else {
         // 根据搜索词获取全部源信息
-        sourcesInfo = await fetchSourcesData(searchTitle || videoTitle || searchQueryParam);
+        sourcesInfo = await fetchSourcesData(
+          searchTitle || videoTitle || searchQueryParam
+        );
       }
 
       if (
@@ -673,7 +577,10 @@ function PlayPageClient() {
 
       // 如果所选详情没有有效集数，尝试直接拉取详情数据作为兜底
       if (!detailData.episodes || detailData.episodes.length === 0) {
-        const enriched = await fetchSourceDetail(detailData.source, detailData.id);
+        const enriched = await fetchSourceDetail(
+          detailData.source,
+          detailData.id
+        );
         if (enriched.length > 0) {
           detailData = enriched[0];
         }
@@ -942,11 +849,22 @@ function PlayPageClient() {
       const el = videoRef.current as any;
       if (!el) return;
       const d = document as any;
-      const isFs = d.fullscreenElement || d.webkitFullscreenElement || d.msFullscreenElement;
+      const isFs =
+        d.fullscreenElement ||
+        d.webkitFullscreenElement ||
+        d.msFullscreenElement;
       if (!isFs) {
-        (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
+        (
+          el.requestFullscreen ||
+          el.webkitRequestFullscreen ||
+          el.msRequestFullscreen
+        )?.call(el);
       } else {
-        (d.exitFullscreen || d.webkitExitFullscreen || d.msExitFullscreen)?.call(d);
+        (
+          d.exitFullscreen ||
+          d.webkitExitFullscreen ||
+          d.msExitFullscreen
+        )?.call(d);
       }
       e.preventDefault();
     }
@@ -1119,7 +1037,11 @@ function PlayPageClient() {
 
     // 清理旧 HLS
     if (hlsRef.current) {
-      try { hlsRef.current.destroy(); } catch (_) { /* ignore */ }
+      try {
+        hlsRef.current.destroy();
+      } catch (_) {
+        /* ignore */
+      }
       hlsRef.current = null;
     }
 
@@ -1129,8 +1051,9 @@ function PlayPageClient() {
     video.poster = videoCover || '';
     video.crossOrigin = 'anonymous';
 
-    const canNativeHls = video.canPlayType('application/vnd.apple.mpegurl') === 'probably' ||
-                         video.canPlayType('application/vnd.apple.mpegurl') === 'maybe';
+    const canNativeHls =
+      video.canPlayType('application/vnd.apple.mpegurl') === 'probably' ||
+      video.canPlayType('application/vnd.apple.mpegurl') === 'maybe';
 
     // 监听
     const onCanPlay = () => {
@@ -1150,7 +1073,9 @@ function PlayPageClient() {
       resumeTimeRef.current = null;
       setIsVideoLoading(false);
     };
-    const onVolume = () => { lastVolumeRef.current = video.volume; };
+    const onVolume = () => {
+      lastVolumeRef.current = video.volume;
+    };
     const onTimeUpdate = () => {
       const now = Date.now();
       let interval = 5000;
@@ -1168,7 +1093,9 @@ function PlayPageClient() {
         setTimeout(() => setCurrentEpisodeIndex(idx + 1), 1000);
       }
     };
-    const onPause = () => { saveCurrentPlayProgress(); };
+    const onPause = () => {
+      saveCurrentPlayProgress();
+    };
 
     video.addEventListener('canplay', onCanPlay);
     video.addEventListener('volumechange', onVolume);
@@ -1189,7 +1116,9 @@ function PlayPageClient() {
         maxBufferLength: 30,
         backBufferLength: 30,
         maxBufferSize: 60 * 1000 * 1000,
-        loader: blockAdEnabledRef.current ? CustomHlsJsLoader : Hls.DefaultConfig.loader,
+        loader: blockAdEnabledRef.current
+          ? CustomHlsJsLoader
+          : Hls.DefaultConfig.loader,
       });
       hlsRef.current = hls;
       hls.attachMedia(video);
@@ -1197,7 +1126,6 @@ function PlayPageClient() {
         hls.loadSource(videoUrl);
       });
       hls.on(Hls.Events.ERROR, function (_event: any, data: any) {
-        console.error('HLS Error:', data);
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
@@ -1207,7 +1135,11 @@ function PlayPageClient() {
               hls.recoverMediaError();
               break;
             default:
-              try { hls.destroy(); } catch (_) { /* ignore */ }
+              try {
+                hls.destroy();
+              } catch (_) {
+                /* ignore */
+              }
               break;
           }
         }
@@ -1221,7 +1153,11 @@ function PlayPageClient() {
       video.removeEventListener('ended', onEnded);
       video.removeEventListener('pause', onPause);
       if (hlsRef.current) {
-        try { hlsRef.current.destroy(); } catch (_) { /* ignore */ }
+        try {
+          hlsRef.current.destroy();
+        } catch (_) {
+          /* ignore */
+        }
         hlsRef.current = null;
       }
     };
