@@ -78,7 +78,17 @@
     "typescript": "^4.9.5"
   },
   "lint-staged": {
-    "**/*.{js,jsx,ts,tsx}": [
+    "public/sw.js": [
+      "prettier -w"
+    ],
+    "public/workbox-*.js": [
+      "prettier -w"
+    ],
+    "scripts/**/*.{js,jsx,ts,tsx}": [
+      "eslint --max-warnings=0",
+      "prettier -w"
+    ],
+    "src/**/*.{js,jsx,ts,tsx}": [
       "eslint --max-warnings=0",
       "prettier -w"
     ],
