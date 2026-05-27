@@ -55,7 +55,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#22c55e',
+  themeColor: '#06b6d4',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -124,7 +124,7 @@ export default async function RootLayout({
         <meta name='format-detection' content='telephone=no' />
         <meta name='mobile-web-app-capable' content='yes' />
         <meta name='msapplication-config' content='/browserconfig.xml' />
-        <meta name='msapplication-TileColor' content='#22c55e' />
+        <meta name='msapplication-TileColor' content='#06b6d4' />
         <meta name='msapplication-tap-highlight' content='no' />
 
         {/* iOS Specific */}
@@ -181,8 +181,8 @@ export default async function RootLayout({
         />
 
         {/* Android Specific */}
-        <meta name='theme-color' content='#22c55e' />
-        <meta name='msapplication-TileColor' content='#22c55e' />
+        <meta name='theme-color' content='#06b6d4' />
+        <meta name='msapplication-TileColor' content='#06b6d4' />
 
         {/* 将配置序列化后直接写入脚本，浏览器端可通过 window.RUNTIME_CONFIG 获取 */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}

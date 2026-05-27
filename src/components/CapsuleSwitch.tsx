@@ -62,14 +62,14 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative inline-flex glass-card dark:glass-card-dark rounded-full p-1.5 shadow-soft ${
+      className={`relative inline-flex rounded-xl border border-slate-200/80 bg-white/75 p-1.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] ${
         className || ''
       }`}
     >
       {/* 滑动的现代指示器 */}
       {indicatorStyle.width > 0 && (
         <div
-          className='absolute top-1.5 bottom-1.5 bg-brand-500 rounded-full shadow-medium transition-all duration-500 ease-out'
+          className='absolute top-1.5 bottom-1.5 rounded-lg bg-slate-950 shadow-medium transition-all duration-500 ease-out dark:bg-white'
           style={{
             left: `${indicatorStyle.left}px`,
             width: `${indicatorStyle.width}px`,
@@ -86,10 +86,10 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
               buttonRefs.current[index] = el;
             }}
             onClick={() => onChange(opt.value)}
-            className={`relative z-10 w-20 px-4 py-2.5 text-sm sm:w-24 sm:py-3 sm:text-base rounded-full font-semibold transition-all duration-300 ease-out cursor-pointer ${
+            className={`relative z-10 w-20 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-300 ease-out sm:w-24 sm:py-3 sm:text-base ${
               isActive
-                ? 'text-white shadow-sm'
-                : 'text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 hover:bg-white/10'
+                ? 'text-white shadow-sm dark:text-slate-950'
+                : 'text-slate-600 hover:bg-slate-950/5 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white'
             }`}
           >
             {opt.label}

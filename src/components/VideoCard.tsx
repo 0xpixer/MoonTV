@@ -1,6 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { CheckCircle, Heart, Link, PlayCircleIcon } from 'lucide-react';
+import {
+  Calendar,
+  CheckCircle,
+  Heart,
+  PlayCircleIcon,
+  Star,
+  Trash2,
+  Tv2,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -259,7 +267,7 @@ export default function VideoCard({
 
   return (
     <div
-      className='group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:z-10 w-full max-w-full min-w-0'
+      className='group relative w-full max-w-full min-w-0 cursor-pointer overflow-hidden rounded-lg transition-all duration-300 ease-out hover:z-10 hover:-translate-y-1'
       onClick={handleClick}
       style={{
         touchAction: 'manipulation',
@@ -267,14 +275,14 @@ export default function VideoCard({
       }}
     >
       {/* 海报容器 */}
-      <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg flex-shrink-0'>
+      <div className='relative aspect-[2/3] w-full flex-shrink-0 overflow-hidden rounded-lg border border-slate-200/70 bg-slate-200 shadow-soft transition-all duration-300 group-hover:border-brand-300/70 group-hover:shadow-large dark:border-white/10 dark:bg-slate-900 dark:group-hover:border-brand-400/60'>
         {/* 海报图片 - 使用新的图片缓存系统 */}
         <Image
           key={`${actualPoster}-${retryCount}`}
           src={processImageUrlWithCache(actualPoster, douban_id)}
           alt={actualTitle}
           fill
-          className='object-cover transition-transform duration-500 group-hover:scale-110 rounded-lg'
+          className='rounded-lg object-cover transition-transform duration-700 group-hover:scale-105'
           sizes='(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw'
           priority={false}
           onError={() => {
@@ -287,10 +295,12 @@ export default function VideoCard({
 
         {/* 图片加载失败时的占位符 */}
         {imageError && (
-          <div className='absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center'>
+          <div className='absolute inset-0 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-800'>
             <div className='text-center'>
-              <div className='text-4xl mb-2'>🎬</div>
-              <div className='text-xs text-gray-500 dark:text-gray-400 px-2 mb-2'>
+              <div className='mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-slate-500 dark:bg-white/10 dark:text-slate-300'>
+                <PlayCircleIcon className='h-5 w-5' />
+              </div>
+              <div className='mb-2 px-2 text-xs text-slate-500 dark:text-slate-400'>
                 {actualTitle}
               </div>
               {retryCount < 2 && (
@@ -299,7 +309,7 @@ export default function VideoCard({
                     e.stopPropagation();
                     handleImageRetry();
                   }}
-                  className='text-xs bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors'
+                  className='rounded bg-white/80 px-2 py-1 text-xs text-slate-700 transition-colors hover:bg-white dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/15'
                 >
                   重试
                 </button>
@@ -309,12 +319,12 @@ export default function VideoCard({
         )}
 
         {/* 悬停遮罩 - Netflix style - 移动端不显示 */}
-        <div className='absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 hidden md:block' />
+        <div className='absolute inset-0 hidden bg-gradient-to-t from-black/88 via-black/26 to-transparent opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 md:block' />
 
         {/* 播放按钮 - 移动端始终显示，桌面端悬停显示 */}
         <div className='absolute inset-0 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-out'>
-          <div className='bg-white/50 md:bg-white/90 backdrop-blur-sm rounded-full p-4 md:p-3 shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300'>
-            <PlayCircleIcon className='w-12 h-12 md:w-8 md:h-8 text-gray-800' />
+          <div className='scale-90 rounded-full bg-white/80 p-4 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-100 md:bg-white/95 md:p-3'>
+            <PlayCircleIcon className='h-12 w-12 text-slate-950 md:h-8 md:w-8' />
           </div>
         </div>
 
@@ -324,7 +334,7 @@ export default function VideoCard({
           <button
             onClick={handleFavoriteToggle}
             disabled={isLoading}
-            className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
+            className='flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full bg-black/70 p-2 text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-black/90'
           >
             {isLoading ? (
               <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
@@ -340,12 +350,12 @@ export default function VideoCard({
             <button
               onClick={handleDeletePlayRecord}
               disabled={isLoading}
-              className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
+              className='flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full bg-black/70 p-2 text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-black/90'
             >
               {isLoading ? (
                 <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
               ) : (
-                <Link className='w-4 h-4' />
+                <Trash2 className='w-4 h-4' />
               )}
             </button>
           )}
@@ -355,7 +365,7 @@ export default function VideoCard({
             <button
               onClick={handleFavoriteToggle}
               disabled={isLoading}
-              className='bg-black/70 backdrop-blur-sm text-white p-2 rounded-full shadow-lg hover:bg-black/90 transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center'
+              className='flex min-h-[40px] min-w-[40px] items-center justify-center rounded-full bg-black/70 p-2 text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-black/90'
             >
               {isLoading ? (
                 <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
@@ -370,29 +380,32 @@ export default function VideoCard({
         <div className='absolute bottom-2 left-2 flex flex-col gap-1'>
           {/* 评分 */}
           {rate && (
-            <div className='bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
-              ⭐ {rate}
+            <div className='inline-flex items-center gap-1 rounded-md bg-black/68 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm'>
+              <Star className='h-3 w-3 fill-accent-400 text-accent-400' />
+              {rate}
             </div>
           )}
 
           {/* 集数 */}
           {episodes && episodes > 1 && (
-            <div className='bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
-              📺 {episodes}集
+            <div className='inline-flex items-center gap-1 rounded-md bg-black/68 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm'>
+              <Tv2 className='h-3 w-3' />
+              {episodes}集
             </div>
           )}
 
           {/* 当前观看集数 */}
           {currentEpisode && currentEpisode > 0 && (
-            <div className='bg-brand-500/90 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
+            <div className='rounded-md bg-brand-500/95 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm'>
               看到第 {currentEpisode} 集
             </div>
           )}
 
           {/* 年份 */}
           {year && (
-            <div className='bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium'>
-              📅 {year}
+            <div className='inline-flex items-center gap-1 rounded-md bg-black/68 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm'>
+              <Calendar className='h-3 w-3' />
+              {year}
             </div>
           )}
         </div>
@@ -401,7 +414,7 @@ export default function VideoCard({
         {progress > 0 && (
           <div className='absolute bottom-0 left-0 right-0 h-1 bg-black/30'>
             <div
-              className='h-full bg-brand-500 transition-all duration-500 ease-out'
+              className='h-full bg-brand-400 transition-all duration-500 ease-out'
               style={{ width: `${(progress / 100) * 100}%` }}
             />
           </div>
@@ -410,7 +423,7 @@ export default function VideoCard({
 
       {/* 标题 */}
       <div className='mt-2 px-1'>
-        <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-300'>
+        <h3 className='line-clamp-2 text-sm font-medium leading-snug text-slate-900 transition-colors duration-300 group-hover:text-brand-700 dark:text-slate-100 dark:group-hover:text-brand-300'>
           {actualTitle}
         </h3>
       </div>

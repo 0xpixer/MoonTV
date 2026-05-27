@@ -4,7 +4,7 @@ export function BackButton() {
   return (
     <button
       onClick={() => window.history.back()}
-      className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
+      className='flex h-10 w-10 items-center justify-center rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-950/5 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white'
       aria-label='Back'
     >
       <ArrowLeft className='w-full h-full' />

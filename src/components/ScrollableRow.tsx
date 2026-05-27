@@ -102,7 +102,7 @@ export default function ScrollableRow({
     >
       <div
         ref={containerRef}
-        className='flex space-x-6 overflow-x-auto scrollbar-hide py-1 sm:py-2 px-4 sm:px-6'
+        className='flex space-x-4 overflow-x-auto scrollbar-hide px-1 py-2 sm:space-x-5 sm:px-2'
         onScroll={checkScroll}
       >
         {children}
@@ -122,15 +122,15 @@ export default function ScrollableRow({
             style={{
               top: '40%',
               bottom: '60%',
-              left: '-4.5rem',
+              left: '0.25rem',
               pointerEvents: 'auto',
             }}
           >
             <button
               onClick={handleScrollLeftClick}
-              className='w-12 h-12 bg-white/95 rounded-full shadow-lg flex items-center justify-center hover:bg-white border border-gray-200 transition-transform hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600'
+              className='flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 shadow-lg transition-transform hover:scale-105 hover:bg-white dark:border-white/10 dark:bg-slate-900/90 dark:hover:bg-slate-800'
             >
-              <ChevronLeft className='w-6 h-6 text-gray-600 dark:text-gray-300' />
+              <ChevronLeft className='h-6 w-6 text-slate-600 dark:text-slate-300' />
             </button>
           </div>
         </div>
@@ -151,15 +151,15 @@ export default function ScrollableRow({
             style={{
               top: '40%',
               bottom: '60%',
-              right: '-4.5rem',
+              right: '0.25rem',
               pointerEvents: 'auto',
             }}
           >
             <button
               onClick={handleScrollRightClick}
-              className='w-12 h-12 bg-white/95 rounded-full shadow-lg flex items-center justify-center hover:bg-white border border-gray-200 transition-transform hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600'
+              className='flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 shadow-lg transition-transform hover:scale-105 hover:bg-white dark:border-white/10 dark:bg-slate-900/90 dark:hover:bg-slate-800'
             >
-              <ChevronRight className='w-6 h-6 text-gray-600 dark:text-gray-300' />
+              <ChevronRight className='h-6 w-6 text-slate-600 dark:text-slate-300' />
             </button>
           </div>
         </div>

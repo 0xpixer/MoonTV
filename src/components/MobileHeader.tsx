@@ -15,7 +15,7 @@ interface MobileHeaderProps {
 const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
   const { siteName } = useSite();
   return (
-    <header className='md:hidden relative w-full glass-card dark:glass-card-dark border-b border-white/20 dark:border-gray-700/30 shadow-soft'>
+    <header className='md:hidden sticky top-0 z-[550] w-full border-b border-slate-200/70 bg-white/85 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/80'>
       <div className='h-14 flex items-center justify-between px-4'>
         {/* 左侧：返回按钮和设置按钮 */}
         <div className='flex items-center gap-3'>
@@ -46,10 +46,9 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
           </div>
           {/* Site Name */}
           <div className='relative'>
-            <span className='text-lg font-bold gradient-text tracking-tight'>
+            <span className='text-lg font-semibold gradient-text'>
               {siteName}
             </span>
-            <div className='absolute -inset-1 bg-gradient-to-r from-brand-500/20 to-accent-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300'></div>
           </div>
         </Link>
       </div>

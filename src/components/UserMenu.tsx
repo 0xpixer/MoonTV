@@ -299,13 +299,13 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 菜单面板 */}
-      <div className='fixed top-14 right-4 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[1001] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden select-none'>
+      <div className='fixed right-4 top-16 z-[1001] w-56 select-none overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/95'>
         {/* 用户信息区域 */}
         {authInfo?.username && (
-          <div className='px-3 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-800/50'>
+          <div className='border-b border-slate-200 px-3 py-2.5 dark:border-white/10'>
             <div className='space-y-1'>
               <div className='flex items-center justify-between'>
-                <span className='text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                <span className='text-xs font-medium uppercase text-slate-500 dark:text-slate-400'>
                   当前用户
                 </span>
                 {authInfo.role && (
@@ -315,14 +315,14 @@ export const UserMenu: React.FC = () => {
                         ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                         : authInfo.role === 'admin'
                         ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                        : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                        : 'bg-brand-100 text-brand-800 dark:bg-brand-500/15 dark:text-brand-200'
                     }`}
                   >
                     {getRoleText(authInfo.role)}
                   </span>
                 )}
               </div>
-              <div className='font-semibold text-gray-900 dark:text-gray-100 text-sm truncate'>
+              <div className='truncate text-sm font-semibold text-slate-950 dark:text-white'>
                 {authInfo.username}
               </div>
             </div>
@@ -334,9 +334,9 @@ export const UserMenu: React.FC = () => {
           {/* 设置按钮 */}
           <button
             onClick={handleSettings}
-            className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
+            className='flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10'
           >
-            <Settings className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+            <Settings className='h-4 w-4 text-slate-500 dark:text-slate-400' />
             <span className='font-medium'>设置</span>
           </button>
 
@@ -344,9 +344,9 @@ export const UserMenu: React.FC = () => {
           {showAdminPanel && (
             <button
               onClick={handleAdminPanel}
-              className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
+              className='flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10'
             >
-              <Shield className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+              <Shield className='h-4 w-4 text-slate-500 dark:text-slate-400' />
               <span className='font-medium'>管理面板</span>
             </button>
           )}
@@ -355,9 +355,9 @@ export const UserMenu: React.FC = () => {
           {showChangePassword && (
             <button
               onClick={handleChangePassword}
-              className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
+              className='flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10'
             >
-              <KeyRound className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+              <KeyRound className='h-4 w-4 text-slate-500 dark:text-slate-400' />
               <span className='font-medium'>修改密码</span>
             </button>
           )}
@@ -672,7 +672,7 @@ export const UserMenu: React.FC = () => {
     <>
       <button
         onClick={handleMenuClick}
-        className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
+        className='flex h-10 w-10 items-center justify-center rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-950/5 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white'
         aria-label='User Menu'
       >
         <User className='w-full h-full' />

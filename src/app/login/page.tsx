@@ -108,11 +108,11 @@ function LoginPageClient() {
               priority
             />
           </div>
-          <h1 className='text-2xl font-bold gradient-text tracking-tight text-center'>
+          <h1 className='text-2xl font-bold gradient-text text-center'>
             {siteName}
           </h1>
         </div>
-        
+
         <form onSubmit={handleSubmit} className='space-y-8'>
           {shouldAskUsername && (
             <div>

@@ -53,7 +53,7 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
 
   return (
     <nav
-      className='md:hidden fixed left-0 right-0 z-[600] glass-card dark:glass-card-dark border-t border-white/20 dark:border-gray-700/30 overflow-hidden'
+      className='md:hidden fixed left-0 right-0 z-[600] overflow-hidden border-t border-slate-200/70 bg-white/90 shadow-[0_-12px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90'
       style={{
         /* 紧贴视口底部，同时在内部留出安全区高度 */
         bottom: 0,
@@ -67,29 +67,22 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
             <li key={item.href} className='flex-shrink-0 w-1/5'>
               <Link
                 href={item.href}
-                className='flex flex-col items-center justify-center w-full h-16 gap-1 text-xs transition-all duration-300 ease-out group'
+                className='flex h-16 w-full flex-col items-center justify-center gap-1 text-xs transition-all duration-300 ease-out group'
               >
-                <div className={`relative p-2 rounded-xl transition-all duration-300 ease-out ${
-                  active 
-                    ? 'bg-gradient-to-r from-brand-500/20 to-accent-500/20 border border-brand-500/30' 
-                    : 'hover:bg-white/10 border border-transparent'
-                }`}>
-                  <item.icon
-                    className={`h-6 w-6 transition-all duration-300 ease-out ${
-                      active
-                        ? 'text-brand-600 dark:text-brand-400'
-                        : 'text-gray-500 dark:text-gray-400 group-hover:text-brand-500 dark:group-hover:text-brand-400'
-                    }`}
-                  />
-                  {active && (
-                    <div className='absolute -inset-1 bg-gradient-to-r from-brand-500/20 to-accent-500/20 rounded-xl blur opacity-0 animate-pulse'></div>
-                  )}
+                <div
+                  className={`relative rounded-lg p-2 transition-all duration-300 ease-out ${
+                    active
+                      ? 'bg-slate-950 text-white shadow-soft dark:bg-white dark:text-slate-950'
+                      : 'text-slate-500 hover:bg-slate-950/5 dark:text-slate-400 dark:hover:bg-white/10'
+                  }`}
+                >
+                  <item.icon className='h-5 w-5 transition-all duration-300 ease-out' />
                 </div>
                 <span
                   className={`font-medium transition-all duration-300 ease-out ${
                     active
-                      ? 'text-brand-600 dark:text-brand-400'
-                      : 'text-gray-600 dark:text-gray-300 group-hover:text-brand-500 dark:group-hover:text-brand-400'
+                      ? 'text-slate-950 dark:text-white'
+                      : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
                   }`}
                 >
                   {item.label}

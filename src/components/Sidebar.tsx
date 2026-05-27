@@ -31,24 +31,21 @@ const Logo = () => {
   return (
     <Link
       href='/'
-      className='flex items-center justify-center h-16 select-none hover:opacity-80 transition-all duration-300 group'
+      className='flex h-16 select-none items-center justify-center transition-all duration-300 hover:opacity-85 group'
     >
       <div className='flex items-center gap-3'>
-        {/* Logo Image */}
         <div className='relative w-10 h-10'>
           <Image
             src='/logo.png'
             alt={siteName}
             fill
-            className='object-contain transition-transform duration-300 group-hover:scale-110'
+            className='object-contain transition-transform duration-300 group-hover:scale-105'
           />
         </div>
-        {/* Site Name */}
         <div className='relative'>
-          <span className='text-xl font-bold gradient-text tracking-tight'>
+          <span className='text-xl font-semibold gradient-text'>
             {siteName}
           </span>
-          <div className='absolute -inset-1 bg-gradient-to-r from-brand-500/20 to-accent-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300'></div>
         </div>
       </div>
     </Link>
@@ -162,8 +159,8 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
       <div className='hidden md:flex'>
         <aside
           data-sidebar
-          className={`fixed top-0 left-0 h-screen glass-card dark:glass-card-dark transition-all duration-500 ease-out z-10 ${
-            isCollapsed ? 'w-20' : 'w-72'
+          className={`fixed top-0 left-0 z-10 h-screen border-r border-slate-200/70 bg-white/80 shadow-soft backdrop-blur-2xl transition-all duration-500 ease-out dark:border-white/10 dark:bg-slate-950/75 ${
+            isCollapsed ? 'w-20' : 'w-64'
           }`}
           style={{
             backdropFilter: 'blur(24px)',
@@ -191,7 +188,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                 {isCollapsed && (
                   <Link
                     href='/'
-                    className='flex items-center justify-center w-12 h-12 select-none hover:opacity-80 transition-all duration-300 group'
+                    className='flex items-center justify-center w-12 h-12 select-none transition-all duration-300 hover:opacity-85 group'
                   >
                     <div className='relative w-8 h-8'>
                       <Image
@@ -206,9 +203,10 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
               </div>
               <button
                 onClick={handleToggle}
-                className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-gray-600 hover:text-gray-800 hover:bg-white/20 transition-all duration-300 ease-out z-10 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-white/10 ${
+                className={`absolute top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-slate-200 bg-white/80 text-slate-500 shadow-soft transition-all duration-300 ease-out hover:border-brand-300 hover:text-slate-950 hover:shadow-medium dark:border-white/10 dark:bg-white/10 dark:text-slate-300 dark:hover:border-brand-400/50 dark:hover:text-white ${
                   isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-3'
                 }`}
+                aria-label='切换侧边栏'
               >
                 <Menu className='h-5 w-5' />
               </button>
@@ -220,12 +218,12 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                 href='/'
                 onClick={() => setActive('/')}
                 data-active={active === '/'}
-                className={`group flex items-center rounded-xl px-4 py-3 text-gray-700 hover:bg-white/20 hover:text-brand-600 data-[active=true]:bg-gradient-to-r data-[active=true]:from-brand-500/20 data-[active=true]:to-accent-500/20 data-[active=true]:text-brand-700 font-medium transition-all duration-300 ease-out min-h-[48px] dark:text-gray-300 dark:hover:text-brand-400 dark:data-[active=true]:text-brand-300 ${
+                className={`group flex min-h-[48px] items-center justify-start gap-4 rounded-lg border border-transparent px-4 py-3 font-medium text-slate-600 transition-all duration-300 ease-out hover:bg-slate-950/5 hover:text-slate-950 data-[active=true]:border-brand-400/40 data-[active=true]:bg-slate-950 data-[active=true]:text-white dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white dark:data-[active=true]:bg-white dark:data-[active=true]:text-slate-950 ${
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                } gap-4 justify-start border border-transparent hover:border-white/20 data-[active=true]:border-brand-500/30`}
+                }`}
               >
                 <div className='w-5 h-5 flex items-center justify-center'>
-                  <Home className='h-5 w-5 text-gray-500 group-hover:text-brand-600 data-[active=true]:text-brand-700 dark:text-gray-400 dark:group-hover:text-brand-400 dark:data-[active=true]:text-brand-300 transition-colors duration-300' />
+                  <Home className='h-5 w-5 transition-colors duration-300' />
                 </div>
                 {!isCollapsed && (
                   <span className='whitespace-nowrap transition-all duration-500 ease-out opacity-100'>
@@ -241,12 +239,12 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                   setActive('/search');
                 }}
                 data-active={active === '/search'}
-                className={`group flex items-center rounded-xl px-4 py-3 text-gray-700 hover:bg-white/20 hover:text-brand-600 data-[active=true]:bg-gradient-to-r data-[active=true]:from-brand-500/20 data-[active=true]:to-accent-500/20 data-[active=true]:text-brand-700 font-medium transition-all duration-300 ease-out min-h-[48px] dark:text-gray-300 dark:hover:text-brand-400 dark:data-[active=true]:text-brand-300 ${
+                className={`group flex min-h-[48px] items-center justify-start gap-4 rounded-lg border border-transparent px-4 py-3 font-medium text-slate-600 transition-all duration-300 ease-out hover:bg-slate-950/5 hover:text-slate-950 data-[active=true]:border-brand-400/40 data-[active=true]:bg-slate-950 data-[active=true]:text-white dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white dark:data-[active=true]:bg-white dark:data-[active=true]:text-slate-950 ${
                   isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                } gap-4 justify-start border border-transparent hover:border-white/20 data-[active=true]:border-brand-500/30`}
+                }`}
               >
                 <div className='w-5 h-5 flex items-center justify-center'>
-                  <Search className='h-5 w-5 text-gray-500 group-hover:text-brand-600 data-[active=true]:text-brand-700 dark:text-gray-400 dark:group-hover:text-brand-400 dark:data-[active=true]:text-brand-300 transition-colors duration-300' />
+                  <Search className='h-5 w-5 transition-colors duration-300' />
                 </div>
                 {!isCollapsed && (
                   <span className='whitespace-nowrap transition-all duration-500 ease-out opacity-100'>
@@ -281,12 +279,12 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                       href={item.href}
                       onClick={() => setActive(item.href)}
                       data-active={isActive}
-                      className={`group flex items-center rounded-xl px-4 py-3 text-sm text-gray-700 hover:bg-white/20 hover:text-brand-600 data-[active=true]:bg-gradient-to-r data-[active=true]:from-brand-500/20 data-[active=true]:to-accent-500/20 data-[active=true]:text-brand-700 transition-all duration-300 ease-out min-h-[48px] dark:text-gray-300 dark:hover:text-brand-400 dark:data-[active=true]:text-brand-300 ${
+                      className={`group flex min-h-[48px] items-center justify-start gap-4 rounded-lg border border-transparent px-4 py-3 text-sm text-slate-600 transition-all duration-300 ease-out hover:bg-slate-950/5 hover:text-slate-950 data-[active=true]:border-brand-400/40 data-[active=true]:bg-slate-950 data-[active=true]:text-white dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white dark:data-[active=true]:bg-white dark:data-[active=true]:text-slate-950 ${
                         isCollapsed ? 'w-full max-w-none mx-0' : 'mx-0'
-                      } gap-4 justify-start border border-transparent hover:border-white/20 data-[active=true]:border-brand-500/30`}
+                      }`}
                     >
                       <div className='w-5 h-5 flex items-center justify-center'>
-                        <Icon className='h-5 w-5 text-gray-500 group-hover:text-brand-600 data-[active=true]:text-brand-700 dark:text-gray-400 dark:group-hover:text-brand-400 dark:data-[active=true]:text-brand-300 transition-colors duration-300' />
+                        <Icon className='h-5 w-5 transition-colors duration-300' />
                       </div>
                       {!isCollapsed && (
                         <span className='whitespace-nowrap transition-all duration-500 ease-out opacity-100'>
@@ -302,7 +300,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
         </aside>
         <div
           className={`transition-all duration-500 ease-out sidebar-offset ${
-            isCollapsed ? 'w-20' : 'w-72'
+            isCollapsed ? 'w-20' : 'w-64'
           }`}
         ></div>
       </div>
