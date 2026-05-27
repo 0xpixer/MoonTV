@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { Circle, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
@@ -55,7 +55,7 @@ export function ThemeToggle() {
       {resolvedTheme === 'dark' ? (
         <Sun className='w-full h-full' />
       ) : (
-        <Moon className='w-full h-full' />
+        <Circle className='w-full h-full' />
       )}
     </button>
   );

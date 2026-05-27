@@ -1,7 +1,7 @@
-// Simple PWA Service Worker for MoonTV
-const CACHE_NAME = 'moontv-v1';
-const STATIC_CACHE = 'moontv-static-v1';
-const DYNAMIC_CACHE = 'moontv-dynamic-v1';
+// Simple PWA Service Worker for TintinTV
+const CACHE_NAME = 'tintintv-v1';
+const STATIC_CACHE = 'tintintv-static-v1';
+const DYNAMIC_CACHE = 'tintintv-dynamic-v1';
 
 // Files to cache immediately
 const STATIC_FILES = [
@@ -167,7 +167,7 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(
-      self.registration.showNotification(data.title || 'MoonTV', options)
+      self.registration.showNotification(data.title || 'TintinTV', options)
     );
   }
 });

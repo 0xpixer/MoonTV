@@ -12,7 +12,10 @@ describe('PWA cache policy', () => {
       getCacheStrategyForRequest('GET', 'https://example.com/api/favorites')
     ).toBe('network-only');
     expect(
-      getCacheStrategyForRequest('GET', 'https://example.com/api/search?q=moon')
+      getCacheStrategyForRequest(
+        'GET',
+        'https://example.com/api/search?q=tintin'
+      )
     ).toBe('network-only');
     expect(
       getCacheStrategyForRequest('GET', 'https://example.com/api/admin/config')

@@ -1,4 +1,4 @@
-// PWA utilities for MoonTV
+// PWA utilities for TintinTV
 
 export interface LockScreenCoverData {
   poster: string;

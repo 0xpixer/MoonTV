@@ -15,7 +15,7 @@ interface HandoffOptions {
   random?: () => number;
 }
 
-const PLAY_ITEMS_STORAGE_PREFIX = 'moontv:play-items:';
+const PLAY_ITEMS_STORAGE_PREFIX = 'tintintv:play-items:';
 
 function getBrowserSessionStorage(): HandoffStorage | null {
   if (typeof window === 'undefined') return null;

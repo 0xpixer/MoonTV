@@ -196,7 +196,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                     <div className='relative w-8 h-8'>
                       <Image
                         src='/logo.png'
-                        alt='MoonTV'
+                        alt='TintinTV'
                         fill
                         className='object-contain transition-transform duration-300 group-hover:scale-110'
                       />

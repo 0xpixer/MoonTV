@@ -11,7 +11,7 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 
 ## File structure
 
-MoonTV is configured as a single-context repo:
+TintinTV is configured as a single-context repo:
 
 ```text
 /

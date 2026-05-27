@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues are tracked in GitHub Issues for `0xpixer/MoonTV`. See `docs/agents/issue-tracker.md`.
+Issues are tracked in GitHub Issues for `0xpixer/TintinTV`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
@@ -10,4 +10,4 @@ Use the default Matt Pocock skills triage label vocabulary. See `docs/agents/tri
 
 ### Domain docs
 
-MoonTV is configured as a single-context repo. See `docs/agents/domain.md`.
+TintinTV is configured as a single-context repo. See `docs/agents/domain.md`.

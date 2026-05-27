@@ -29,8 +29,8 @@ class ThrowingStorage {
 }
 
 const item: SearchResult = {
-  id: 'moon-tv',
-  title: 'Moon TV',
+  id: 'tintin-tv',
+  title: 'Tintin TV',
   poster: '',
   episodes: ['https://example.com/video.m3u8'],
   source: 'source-a',

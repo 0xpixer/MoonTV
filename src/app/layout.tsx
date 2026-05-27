@@ -9,7 +9,7 @@ import { getConfig } from '@/lib/config';
 import { SiteProvider } from '../components/SiteProvider';
 import { ThemeProvider } from '../components/ThemeProvider';
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
@@ -17,7 +17,7 @@ const inter = Inter({
 
 // 动态生成 metadata，支持配置更新后的标题变化
 export async function generateMetadata(): Promise<Metadata> {
-  let siteName = process.env.SITE_NAME || 'MoonTV';
+  let siteName = process.env.SITE_NAME || 'TintinTV';
   if (
     process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'd1' &&
     process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'upstash'
@@ -41,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: 'website',
       locale: 'zh_CN',
-      url: 'https://moontv.app',
+      url: 'https://tintintv.club',
       title: siteName,
       description: 'Modern streaming platform for movies and TV shows',
       siteName: siteName,
@@ -68,7 +68,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let siteName = process.env.SITE_NAME || 'MoonTV';
+  let siteName = process.env.SITE_NAME || 'TintinTV';
   let announcement =
     process.env.ANNOUNCEMENT ||
     '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。';
@@ -99,44 +99,91 @@ export default async function RootLayout({
     <html lang='zh-CN' suppressHydrationWarning className={inter.variable}>
       <head>
         {/* Favicon - using high resolution icon */}
-        <link rel="icon" href="/icons/icon-192x192.png" sizes="192x192" type="image/png" />
-        <link rel="icon" href="/icons/icon-512x512.png" sizes="512x512" type="image/png" />
-        <link rel="shortcut icon" href="/icons/icon-192x192.png" />
-        
+        <link
+          rel='icon'
+          href='/icons/icon-192x192.png'
+          sizes='192x192'
+          type='image/png'
+        />
+        <link
+          rel='icon'
+          href='/icons/icon-512x512.png'
+          sizes='512x512'
+          type='image/png'
+        />
+        <link rel='shortcut icon' href='/icons/icon-192x192.png' />
+
         {/* PWA Meta Tags */}
-        <meta name="application-name" content={siteName} />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content={siteName} />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#22c55e" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        
+        <meta name='application-name' content={siteName} />
+        <meta name='apple-mobile-web-app-capable' content='yes' />
+        <meta
+          name='apple-mobile-web-app-status-bar-style'
+          content='black-translucent'
+        />
+        <meta name='apple-mobile-web-app-title' content={siteName} />
+        <meta name='format-detection' content='telephone=no' />
+        <meta name='mobile-web-app-capable' content='yes' />
+        <meta name='msapplication-config' content='/browserconfig.xml' />
+        <meta name='msapplication-TileColor' content='#22c55e' />
+        <meta name='msapplication-tap-highlight' content='no' />
+
         {/* iOS Specific */}
-        <meta name="apple-touch-fullscreen" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        
+        <meta name='apple-touch-fullscreen' content='yes' />
+        <meta name='apple-mobile-web-app-capable' content='yes' />
+        <meta
+          name='apple-mobile-web-app-status-bar-style'
+          content='black-translucent'
+        />
+
         {/* Lock Screen Cover Support */}
-        <meta name="apple-mobile-web-app-title" content={siteName} />
-        
+        <meta name='apple-mobile-web-app-title' content={siteName} />
+
         {/* High resolution iOS icons - using standard iOS icon files */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="256x256" href="/icons/icon-256x256.png" />
-        <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.png" />
-        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
-        
+        <link rel='apple-touch-icon' href='/apple-touch-icon.png' />
+        <link
+          rel='apple-touch-icon-precomposed'
+          href='/apple-touch-icon-precomposed.png'
+        />
+        <link
+          rel='apple-touch-icon'
+          sizes='152x152'
+          href='/icons/icon-152x152.png'
+        />
+        <link
+          rel='apple-touch-icon'
+          sizes='167x167'
+          href='/icons/icon-192x192.png'
+        />
+        <link
+          rel='apple-touch-icon'
+          sizes='180x180'
+          href='/icons/icon-192x192.png'
+        />
+        <link
+          rel='apple-touch-icon'
+          sizes='192x192'
+          href='/icons/icon-192x192.png'
+        />
+        <link
+          rel='apple-touch-icon'
+          sizes='256x256'
+          href='/icons/icon-256x256.png'
+        />
+        <link
+          rel='apple-touch-icon'
+          sizes='384x384'
+          href='/icons/icon-384x384.png'
+        />
+        <link
+          rel='apple-touch-icon'
+          sizes='512x512'
+          href='/icons/icon-512x512.png'
+        />
+
         {/* Android Specific */}
-        <meta name="theme-color" content="#22c55e" />
-        <meta name="msapplication-TileColor" content="#22c55e" />
-        
+        <meta name='theme-color' content='#22c55e' />
+        <meta name='msapplication-TileColor' content='#22c55e' />
+
         {/* 将配置序列化后直接写入脚本，浏览器端可通过 window.RUNTIME_CONFIG 获取 */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
@@ -144,7 +191,7 @@ export default async function RootLayout({
             __html: `window.RUNTIME_CONFIG = ${JSON.stringify(runtimeConfig)};`,
           }}
         />
-        
+
         {/* PWA Registration Script */}
         <script
           dangerouslySetInnerHTML={{
@@ -215,12 +262,12 @@ export default async function RootLayout({
       </head>
       <body
         className={`${inter.className} min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased`}
-        style={{ 
+        style={{
           touchAction: 'manipulation',
           WebkitTapHighlightColor: 'transparent',
           WebkitTouchCallout: 'none',
           WebkitUserSelect: 'none',
-          userSelect: 'none'
+          userSelect: 'none',
         }}
       >
         <ThemeProvider
