@@ -43,3 +43,11 @@ sitemap-*.xml
 # generated files
 src/lib/runtime.ts
 public/manifest.json
+
+# Android TV local build secrets and outputs
+android-tv/local.properties
+android-tv/.gradle/
+android-tv/**/*.jks*
+android-tv/**/build/
+android-tv/build/
+dist/*.apk

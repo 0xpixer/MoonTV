@@ -1,0 +1,54 @@
+plugins {
+    id "com.android.application"
+}
+
+def localProps = new Properties()
+def localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+
+def tvUrl = localProps.getProperty("tintintv.url", "https://tintintv.club")
+def tvToken = localProps.getProperty("tintintv.tvAccessToken", "")
+def releaseStoreFile = localProps.getProperty("release.storeFile", "")
+def releaseStorePassword = localProps.getProperty("release.storePassword", "")
+def releaseKeyAlias = localProps.getProperty("release.keyAlias", "")
+def releaseKeyPassword = localProps.getProperty("release.keyPassword", "")
+
+android {
+    namespace "club.tintintv.tv"
+    compileSdk 35
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    defaultConfig {
+        applicationId "club.tintintv.tv"
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+
+        buildConfigField "String", "TINTINTV_URL", "\"${tvUrl}\""
+        buildConfigField "String", "TV_ACCESS_TOKEN", "\"${tvToken}\""
+    }
+
+    signingConfigs {
+        release {
+            if (releaseStoreFile) {
+                storeFile rootProject.file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+}
